@@ -10,15 +10,19 @@ There is also still some more stuff to work on/add to it. The following is a (no
 
 # TODO
 
-- [ ] Put this on GitHub
+- [x] Put this on GitHub
 - [ ] Add build and usage instructions
 - [ ] show_month currently just displays all entries in the record.ttr file. Should I split the files into months? Or do some sort of filtering and just keep one big file?
-- [ ] There is way too much code duplication (e.g. opening file and finding pointer to the beginning of last line) 
+- [x] There is way too much code duplication (e.g. opening file and finding pointer to the beginning of last line) 
 - [ ] show_month just uses 45 minutes of default pause timing on a day. Should this be customizable? This is very specific to my use case.
 - [ ] There is no way of adding times in post (in case I forget to start the timer)
-- [ ] There are lots of early returns which cause memory leaks because stuff isn't freed. Might be a good time to finaly look into memory arenas
+- [x] There are lots of early returns which cause memory leaks because stuff isn't freed. 
+- [ ] Might be a good time to finaly look into memory arenas/string reprensentation
+- [ ] Try and remove as much standard library stuff as possible
 - [ ] The error handling is super scuffed
 - [ ] There are some basics tests for file parsing but thats it 
+- [ ] On first start no file is created. The utility only works if a record file already exists
+- [ ] Split out file api
 
 # How to use the tool
 

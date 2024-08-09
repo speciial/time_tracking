@@ -32,4 +32,12 @@ void ttr_showMonth();
 
 TTRTimeTracking ttr_internal_parseLine(char *line);
 
+TTRTimeTracking ttr_internal_parseLastRecordEntry(const char *fileName);
+
+void ttr_internal_printCompleteTracking(TTRTimeTracking timeTracking);
+
+void ttr_internal_printPauseTime(TTRTimeTracking timeTracking);
+
+void ttr_internal_printStartTime(TTRTimeTracking timeTracking);
+
 #endif // TIME_TRACKING_H

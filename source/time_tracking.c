@@ -82,6 +82,141 @@ static FileContent readFullFile(const char *filename)
     return result;
 }
 
+void ttr_start()
+{
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+
+    if (timeTracking.start != 0)
+    {
+        printf("Timer has already been started.\n");
+        return;
+    }
+
+    time_t timer = time(0);
+    char timeStamp[12] = {0};
+    sprintf(timeStamp, "%jd,", timer);
+    appendToFile("record.ttr", timeStamp, 11);
+}
+
+void ttr_end()
+{
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+    if (timeTracking.start == 0)
+    {
+        printf("No timer has been started yet.\n");
+        return;
+    }
+    if ((timeTracking.pauseCount % 2) != 0)
+    {
+        printf("Active pause has not been ended.\n");
+        return;
+    }
+
+    time_t timer = time(0);
+    char timeStamp[13] = {0};
+    sprintf(timeStamp, "%jd,\n", timer);
+    appendToFile("record.ttr", timeStamp, 12);
+}
+
+void ttr_startPause()
+{
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+    if (timeTracking.start == 0)
+    {
+        printf("No timer has been started yet.\n");
+        return;
+    }
+    if ((timeTracking.pauseCount % 2) != 0)
+    {
+        printf("Active pause has not been ended.\n");
+        return;
+    }
+    if (timeTracking.pauseCount >= MAX_PAUSE_COUNT)
+    {
+        printf("You can only pause up to 3 times.\n");
+        return;
+    }
+
+    time_t timer = time(0);
+    char timeStamp[13] = {0};
+    sprintf(timeStamp, "p%jd,", timer);
+    appendToFile("record.ttr", timeStamp, 12);
+}
+
+void ttr_endPause()
+{
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+    if (timeTracking.start == 0)
+    {
+        printf("No timer has been started yet.\n");
+        return;
+    }
+    if ((timeTracking.pauseCount % 2) != 1)
+    {
+        printf("No active pause has been started.\n");
+        return;
+    }
+    if (timeTracking.pauseCount >= MAX_PAUSE_COUNT)
+    {
+        printf("You can only pause up to 3 times.\n");
+        return;
+    }
+
+    time_t timer = time(0);
+    char timeStamp[13] = {0};
+    sprintf(timeStamp, "p%jd,", timer);
+    appendToFile("record.ttr", timeStamp, 12);
+}
+
+void ttr_show()
+{
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+
+    if (timeTracking.start == 0)
+    {
+        printf("No timer has been started yet.\n");
+        return;
+    }
+
+    if ((timeTracking.pauseCount % 2) == 0)
+    {
+        ttr_internal_printStartTime(timeTracking);
+    }
+    else
+    {
+        ttr_internal_printPauseTime(timeTracking);
+    }
+}
+
+void ttr_showMonth()
+{
+    FileContent fileContent = readFullFile("record.ttr");
+
+    if (fileContent.sizeInBytes != 0)
+    {
+        long charIndex = 0;
+
+        charIndex = 0;
+        while (fileContent.content[charIndex] != 0 && charIndex < fileContent.sizeInBytes)
+        {
+            TTRTimeTracking timeTracking = ttr_internal_parseLine(&fileContent.content[charIndex]);
+
+            if (timeTracking.start != 0 && timeTracking.end != 0)
+            {
+                ttr_internal_printCompleteTracking(timeTracking);
+            }
+
+            while (fileContent.content[charIndex] != '\n' && charIndex < fileContent.sizeInBytes)
+            {
+                charIndex++;
+            }
+            charIndex++;
+        }
+    }
+
+    freeFileContent(&fileContent);
+}
+
 TTRTimeTracking ttr_internal_parseLine(char *line)
 {
     TTRTimeTracking result = {0};
@@ -144,6 +279,30 @@ TTRTimeTracking ttr_internal_parseLine(char *line)
     }
 
     return result;
+}
+
+TTRTimeTracking ttr_internal_parseLastRecordEntry(const char *fileName)
+{
+    TTRTimeTracking timeTracking = {0};
+
+    FileContent fileContent = readFullFile("record.ttr");
+    long charIndex = fileContent.sizeInBytes;
+    if (charIndex != 0)
+    {
+        while (charIndex != 0 && fileContent.content[charIndex] != '\n')
+        {
+            charIndex--;
+        }
+        if (charIndex != 0)
+        {
+            charIndex += 1; // skip over new line;
+        }
+
+        timeTracking = ttr_internal_parseLine(&fileContent.content[charIndex]);
+    }
+    freeFileContent(&fileContent);
+
+    return timeTracking;
 }
 
 void ttr_internal_printStartTime(TTRTimeTracking timeTracking)
@@ -249,231 +408,4 @@ void ttr_internal_printCompleteTracking(TTRTimeTracking timeTracking)
     strftime(netElapsedTimeString, 6, "%H:%M", &netElapsedTimeStruct);
 
     printf("%s, %s - %s, Total Time: %s, Net Time: %s\n", dayString, startTimeString, endTimeString, elapsedTimeString, netElapsedTimeString);
-}
-
-void ttr_start()
-{
-    FileContent fileContent = readFullFile("record.ttr");
-
-    long charIndex = fileContent.sizeInBytes;
-    if (charIndex != 0)
-    {
-        while (charIndex != 0 && fileContent.content[charIndex] != '\n')
-        {
-            charIndex--;
-        }
-        if (charIndex != 0)
-        {
-            charIndex += 1; // skip over new line;
-        }
-
-        TTRTimeTracking timeTracking = ttr_internal_parseLine(&fileContent.content[charIndex]);
-
-        if (timeTracking.start != 0)
-        {
-            printf("Timer has already been started.\n");
-            return;
-        }
-    }
-
-    time_t timer = time(0);
-    char timeStamp[12] = {0};
-    sprintf(timeStamp, "%jd,", timer);
-    appendToFile("record.ttr", timeStamp, 11);
-
-    freeFileContent(&fileContent);
-}
-
-void ttr_end()
-{
-    FileContent fileContent = readFullFile("record.ttr");
-
-    long charIndex = fileContent.sizeInBytes;
-    if (charIndex != 0)
-    {
-        while (charIndex != 0 && fileContent.content[charIndex] != '\n')
-        {
-            charIndex--;
-        }
-        if (charIndex != 0)
-        {
-            charIndex += 1; // skip over new line;
-        }
-
-        TTRTimeTracking timeTracking = ttr_internal_parseLine(&fileContent.content[charIndex]);
-
-        if (timeTracking.start == 0)
-        {
-            printf("No timer has been started yet.\n");
-            return;
-        }
-        if ((timeTracking.pauseCount % 2) != 0)
-        {
-            printf("Active pause has not been ended.\n");
-            return;
-        }
-    }
-
-    time_t timer = time(0);
-    char timeStamp[13] = {0};
-    sprintf(timeStamp, "%jd,\n", timer);
-    appendToFile("record.ttr", timeStamp, 12);
-
-    freeFileContent(&fileContent);
-}
-
-void ttr_startPause()
-{
-    FileContent fileContent = readFullFile("record.ttr");
-
-    long charIndex = fileContent.sizeInBytes;
-    if (charIndex != 0)
-    {
-        while (charIndex != 0 && fileContent.content[charIndex] != '\n')
-        {
-            charIndex--;
-        }
-        if (charIndex != 0)
-        {
-            charIndex += 1; // skip over new line;
-        }
-
-        TTRTimeTracking timeTracking = ttr_internal_parseLine(&fileContent.content[charIndex]);
-
-        if (timeTracking.start == 0)
-        {
-            printf("No timer has been started yet.\n");
-            return;
-        }
-        if ((timeTracking.pauseCount % 2) != 0)
-        {
-            printf("Active pause has not been ended.\n");
-            return;
-        }
-        if (timeTracking.pauseCount >= MAX_PAUSE_COUNT)
-        {
-            printf("You can only pause up to 3 times.\n");
-            return;
-        }
-    }
-
-    time_t timer = time(0);
-    char timeStamp[13] = {0};
-    sprintf(timeStamp, "p%jd,", timer);
-    appendToFile("record.ttr", timeStamp, 12);
-
-    freeFileContent(&fileContent);
-}
-
-void ttr_endPause()
-{
-    FileContent fileContent = readFullFile("record.ttr");
-
-    long charIndex = fileContent.sizeInBytes;
-    if (charIndex != 0)
-    {
-        while (charIndex != 0 && fileContent.content[charIndex] != '\n')
-        {
-            charIndex--;
-        }
-        if (charIndex != 0)
-        {
-            charIndex += 1; // skip over new line;
-        }
-
-        TTRTimeTracking timeTracking = ttr_internal_parseLine(&fileContent.content[charIndex]);
-
-        if (timeTracking.start == 0)
-        {
-            printf("No timer has been started yet.\n");
-            return;
-        }
-        if ((timeTracking.pauseCount % 2) != 1)
-        {
-            printf("No active pause has been started.\n");
-            return;
-        }
-        if (timeTracking.pauseCount >= MAX_PAUSE_COUNT)
-        {
-            printf("You can only pause up to 3 times.\n");
-            return;
-        }
-    }
-
-    time_t timer = time(0);
-    char timeStamp[13] = {0};
-    sprintf(timeStamp, "p%jd,", timer);
-    appendToFile("record.ttr", timeStamp, 12);
-
-    freeFileContent(&fileContent);
-}
-
-void ttr_show()
-{
-    FileContent fileContent = readFullFile("record.ttr");
-
-    long charIndex = fileContent.sizeInBytes;
-    if (charIndex != 0)
-    {
-        while (charIndex != 0 && fileContent.content[charIndex] != '\n')
-        {
-            charIndex--;
-        }
-        if (charIndex != 0)
-        {
-            charIndex += 1; // skip over new line;
-        }
-
-        TTRTimeTracking timeTracking = ttr_internal_parseLine(&fileContent.content[charIndex]);
-
-        if (timeTracking.start == 0)
-        {
-            printf("No timer has been started yet.\n");
-            return;
-        }
-
-        if ((timeTracking.pauseCount % 2) == 0)
-        {
-            ttr_internal_printStartTime(timeTracking);
-        }
-        else
-        {
-            ttr_internal_printPauseTime(timeTracking);
-        }
-
-        return;
-    }
-
-    printf("No times have been tracked.\n");
-
-    freeFileContent(&fileContent);
-}
-
-void ttr_showMonth()
-{
-    FileContent fileContent = readFullFile("record.ttr");
-
-    if (fileContent.sizeInBytes != 0)
-    {
-        long charIndex = 0;
-
-        charIndex = 0;
-        while (fileContent.content[charIndex] != 0 && charIndex < fileContent.sizeInBytes)
-        {
-            TTRTimeTracking timeTracking = ttr_internal_parseLine(&fileContent.content[charIndex]);
-
-            if (timeTracking.start != 0 && timeTracking.end != 0)
-            {
-                ttr_internal_printCompleteTracking(timeTracking);
-            }
-
-            while (fileContent.content[charIndex] != '\n' && charIndex < fileContent.sizeInBytes)
-            {
-                charIndex++;
-            }
-            charIndex++;
-        }
-    }
-
-    freeFileContent(&fileContent);
 }
