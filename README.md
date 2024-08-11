@@ -19,10 +19,12 @@ There is also still some more stuff to work on/add to it. The following is a (no
 - [x] There are lots of early returns which cause memory leaks because stuff isn't freed. 
 - [ ] Might be a good time to finaly look into memory arenas/string reprensentation
 - [ ] Try and remove as much standard library stuff as possible
-- [ ] The error handling is super scuffed
+- [x] The error handling is super scuffed (NOTE: I don't really do error handling anymore. The systems just works if you get back a zero value.)
+- [x] On first start no file is created. The utility only works if a record file already exists
+- [x] Split out file api
 - [ ] There are some basics tests for file parsing but thats it 
-- [ ] On first start no file is created. The utility only works if a record file already exists
-- [ ] Split out file api
+- [ ] Add ctest or similar for testing. More important now since the setup with the test directory broke the build.
+- [ ] Documenation?
 
 # How to use the tool
 

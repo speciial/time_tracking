@@ -40,4 +40,6 @@ void ttr_internal_printPauseTime(TTRTimeTracking timeTracking);
 
 void ttr_internal_printStartTime(TTRTimeTracking timeTracking);
 
+struct tm ttr_internal_convertSecondsToTM(long seconds);
+
 #endif // TIME_TRACKING_H

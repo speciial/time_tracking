@@ -5,87 +5,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-struct file_content
-{
-    long sizeInBytes;
-    char *content;
-};
-typedef struct file_content FileContent;
+#include "files.h"
 
-static void freeFileContent(FileContent *fileContent)
-{
-    free(fileContent->content);
-    fileContent->content = 0;
-    fileContent->sizeInBytes = 0;
-}
-
-static void appendToFile(const char *filename, char *content, long bytesToWrite)
-{
-    FILE *filePointer = fopen(filename, "a");
-
-    if (!filePointer)
-    {
-        fclose(filePointer);
-        printf("Could not open file: %s\n", filename);
-        return;
-    }
-
-    size_t bytesWritten = fwrite(content, sizeof(char), bytesToWrite, filePointer);
-    if (bytesWritten == 0)
-    {
-        printf("Failed to write file content.\n");
-    }
-
-    fclose(filePointer);
-}
-
-static FileContent readFullFile(const char *filename)
-{
-    // TODO: Clean up checking/early returns
-
-    FileContent result = {0};
-    FILE *filePointer = fopen(filename, "r");
-
-    if (!filePointer)
-    {
-        fclose(filePointer);
-        printf("Could not open file: %s\n", filename);
-        return result;
-    }
-
-    fseek(filePointer, 0, SEEK_END);
-    long sizeInBytes = ftell(filePointer);
-    fseek(filePointer, 0, SEEK_SET);
-
-    result.content = (char *)malloc(sizeInBytes + 1);
-    if (!result.content)
-    {
-        fclose(filePointer);
-        result.content = 0;
-        printf("Could not allocate requested size: %d\n", sizeInBytes);
-        return result;
-    }
-    memset(result.content, 0, sizeInBytes + 1);
-
-    size_t bytesRead = fread(result.content, sizeof(char), sizeInBytes, filePointer);
-    if (bytesRead > sizeInBytes)
-    {
-        fclose(filePointer);
-        free(result.content);
-        result.content = 0;
-        printf("Bytes read exceeds bytes allocated: %d, %zu\n", sizeInBytes, bytesRead);
-        return result;
-    }
-    result.sizeInBytes = sizeInBytes;
-
-    fclose(filePointer);
-    return result;
-}
+const char *RECORD_FILE_NAME = "record.ttr";
 
 void ttr_start()
 {
-    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+    createFileIfNotExists(RECORD_FILE_NAME);
 
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry(RECORD_FILE_NAME);
     if (timeTracking.start != 0)
     {
         printf("Timer has already been started.\n");
@@ -95,12 +23,12 @@ void ttr_start()
     time_t timer = time(0);
     char timeStamp[12] = {0};
     sprintf(timeStamp, "%jd,", timer);
-    appendToFile("record.ttr", timeStamp, 11);
+    appendToFile(RECORD_FILE_NAME, timeStamp, 11);
 }
 
 void ttr_end()
 {
-    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry(RECORD_FILE_NAME);
     if (timeTracking.start == 0)
     {
         printf("No timer has been started yet.\n");
@@ -115,12 +43,12 @@ void ttr_end()
     time_t timer = time(0);
     char timeStamp[13] = {0};
     sprintf(timeStamp, "%jd,\n", timer);
-    appendToFile("record.ttr", timeStamp, 12);
+    appendToFile(RECORD_FILE_NAME, timeStamp, 12);
 }
 
 void ttr_startPause()
 {
-    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry(RECORD_FILE_NAME);
     if (timeTracking.start == 0)
     {
         printf("No timer has been started yet.\n");
@@ -140,12 +68,12 @@ void ttr_startPause()
     time_t timer = time(0);
     char timeStamp[13] = {0};
     sprintf(timeStamp, "p%jd,", timer);
-    appendToFile("record.ttr", timeStamp, 12);
+    appendToFile(RECORD_FILE_NAME, timeStamp, 12);
 }
 
 void ttr_endPause()
 {
-    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry(RECORD_FILE_NAME);
     if (timeTracking.start == 0)
     {
         printf("No timer has been started yet.\n");
@@ -165,12 +93,12 @@ void ttr_endPause()
     time_t timer = time(0);
     char timeStamp[13] = {0};
     sprintf(timeStamp, "p%jd,", timer);
-    appendToFile("record.ttr", timeStamp, 12);
+    appendToFile(RECORD_FILE_NAME, timeStamp, 12);
 }
 
 void ttr_show()
 {
-    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry("record.ttr");
+    TTRTimeTracking timeTracking = ttr_internal_parseLastRecordEntry(RECORD_FILE_NAME);
 
     if (timeTracking.start == 0)
     {
@@ -190,7 +118,7 @@ void ttr_show()
 
 void ttr_showMonth()
 {
-    FileContent fileContent = readFullFile("record.ttr");
+    FileContent fileContent = readFullFile(RECORD_FILE_NAME);
 
     if (fileContent.sizeInBytes != 0)
     {
@@ -285,7 +213,7 @@ TTRTimeTracking ttr_internal_parseLastRecordEntry(const char *fileName)
 {
     TTRTimeTracking timeTracking = {0};
 
-    FileContent fileContent = readFullFile("record.ttr");
+    FileContent fileContent = readFullFile(RECORD_FILE_NAME);
     long charIndex = fileContent.sizeInBytes;
     if (charIndex != 0)
     {
@@ -303,6 +231,20 @@ TTRTimeTracking ttr_internal_parseLastRecordEntry(const char *fileName)
     freeFileContent(&fileContent);
 
     return timeTracking;
+}
+
+struct tm ttr_internal_convertSecondsToTM(long seconds)
+{
+    struct tm result = {0};
+    if (seconds > 0)
+    {
+        result.tm_sec += seconds % 60;
+        seconds /= 60;
+        result.tm_min += seconds % 60;
+        seconds /= 60;
+        result.tm_hour += seconds % 24;
+    }
+    return result;
 }
 
 void ttr_internal_printStartTime(TTRTimeTracking timeTracking)
@@ -324,13 +266,7 @@ void ttr_internal_printStartTime(TTRTimeTracking timeTracking)
     time_t currentTime = time(0);
     long elapsedTimeInSeconds = (long)difftime(currentTime, timeTracking.start) - pauseSecondsToSubstract;
 
-    struct tm elapsedTimeStruct = {0};
-    elapsedTimeStruct.tm_sec += elapsedTimeInSeconds % 60;
-    elapsedTimeInSeconds /= 60;
-    elapsedTimeStruct.tm_min += elapsedTimeInSeconds % 60;
-    elapsedTimeInSeconds /= 60;
-    elapsedTimeStruct.tm_hour += elapsedTimeInSeconds % 24;
-
+    struct tm elapsedTimeStruct = ttr_internal_convertSecondsToTM(elapsedTimeInSeconds);
     char elapsedTimeString[6] = {0};
     strftime(elapsedTimeString, 6, "%H:%M", &elapsedTimeStruct);
 
@@ -345,13 +281,7 @@ void ttr_internal_printPauseTime(TTRTimeTracking timeTracking)
     time_t currentTime = time(0);
     long elapsedTimeInSeconds = (long)difftime(currentTime, timeTracking.pauses[timeTracking.pauseCount - 1]);
 
-    struct tm elapsedTimeStruct = {0};
-    elapsedTimeStruct.tm_sec += elapsedTimeInSeconds % 60;
-    elapsedTimeInSeconds /= 60;
-    elapsedTimeStruct.tm_min += elapsedTimeInSeconds % 60;
-    elapsedTimeInSeconds /= 60;
-    elapsedTimeStruct.tm_hour += elapsedTimeInSeconds % 24;
-
+    struct tm elapsedTimeStruct = ttr_internal_convertSecondsToTM(elapsedTimeInSeconds);
     char elapsedTimeString[6] = {0};
     strftime(elapsedTimeString, 6, "%H:%M", &elapsedTimeStruct);
 
@@ -382,28 +312,12 @@ void ttr_internal_printCompleteTracking(TTRTimeTracking timeTracking)
 
     long elapsedTimeInSeconds = (long)difftime(timeTracking.end, timeTracking.start) - pauseSecondsToSubstract;
     long netElapsedTimeInSeconds = elapsedTimeInSeconds - 45 * 60;
-    if (netElapsedTimeInSeconds < 0)
-    {
-        netElapsedTimeInSeconds = elapsedTimeInSeconds;
-    }
 
-    struct tm elapsedTimeStruct = {0};
-    elapsedTimeStruct.tm_sec += elapsedTimeInSeconds % 60;
-    elapsedTimeInSeconds /= 60;
-    elapsedTimeStruct.tm_min += elapsedTimeInSeconds % 60;
-    elapsedTimeInSeconds /= 60;
-    elapsedTimeStruct.tm_hour += elapsedTimeInSeconds % 24;
-
+    struct tm elapsedTimeStruct = ttr_internal_convertSecondsToTM(elapsedTimeInSeconds);
     char elapsedTimeString[6] = {0};
     strftime(elapsedTimeString, 6, "%H:%M", &elapsedTimeStruct);
 
-    struct tm netElapsedTimeStruct = {0};
-    netElapsedTimeStruct.tm_sec += netElapsedTimeInSeconds % 60;
-    netElapsedTimeInSeconds /= 60;
-    netElapsedTimeStruct.tm_min += netElapsedTimeInSeconds % 60;
-    netElapsedTimeInSeconds /= 60;
-    netElapsedTimeStruct.tm_hour += netElapsedTimeInSeconds % 24;
-
+    struct tm netElapsedTimeStruct = ttr_internal_convertSecondsToTM(netElapsedTimeInSeconds);
     char netElapsedTimeString[6] = {0};
     strftime(netElapsedTimeString, 6, "%H:%M", &netElapsedTimeStruct);
 
