@@ -71,11 +71,31 @@ FileContent readFullFile(const char *filename)
     return result;
 }
 
+void writeFullFile(const char *filename, const char *content, int bytesToWrite)
+{
+    FILE *filePointer = fopen(filename, "w");
+
+    if (filePointer)
+    {
+        size_t bytesWritten = fwrite(content, sizeof(char), bytesToWrite, filePointer);
+        if (bytesWritten <= 0)
+        {
+            printf("File content could not be written.");
+        }
+    }
+    else
+    {
+        printf("Could not open file: %s\n", filename);
+    }
+
+    fclose(filePointer);
+}
+
 void createFileIfNotExists(const char *filename)
 {
-    // NOTE: When opening a file with x-flag while specified file 
+    // NOTE: When opening a file with x-flag while specified file
     //       already exists, fclose will throw an error on that
-    //       file handle. The handle only needs to be cleaned if 
+    //       file handle. The handle only needs to be cleaned if
     //       a new file was actually created.
     FILE *fileToCreate = fopen(filename, "wx");
     if (fileToCreate)

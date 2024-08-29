@@ -12,11 +12,18 @@ There is also still some more stuff to work on/add to it. The following is a (no
 
 - [x] Put this on GitHub
 - [ ] Add build and usage instructions
-- [ ] show_month currently just displays all entries in the record.ttr file. Should I split the files into months? Or do some sort of filtering and just keep one big file?
+- [ ] Add more compiler warnings 
+- [x] show_month improvements
+  - [x] Add filtering for specific months (like an additional paramter)
+  - [x] Add generic setting for how long the default break is (in my case 45 mins)
+  - [x] Add generic setting for how to display the time (hh:mm or decimal)
+- [x] config command for settings
+- [ ] mail command for printing the email subject
+- [ ] help command for options.
 - [x] There is way too much code duplication (e.g. opening file and finding pointer to the beginning of last line) 
-- [ ] show_month just uses 45 minutes of default pause timing on a day. Should this be customizable? This is very specific to my use case.
 - [ ] There is no way of adding times in post (in case I forget to start the timer)
-- [x] There are lots of early returns which cause memory leaks because stuff isn't freed. 
+- [ ] Can we just memory map the record and settings files? I don't really need them to be human readable if I can edit contents in post
+- [x] There are lots of early returns which cause memory leaks because stuff isn't freed
 - [ ] Might be a good time to finaly look into memory arenas/string reprensentation
 - [ ] Try and remove as much standard library stuff as possible
 - [x] The error handling is super scuffed (NOTE: I don't really do error handling anymore. The systems just works if you get back a zero value.)

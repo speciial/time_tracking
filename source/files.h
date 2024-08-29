@@ -14,6 +14,8 @@ void appendToFile(const char *filename, char *content, long bytesToWrite);
 
 FileContent readFullFile(const char *filename);
 
+void writeFullFile(const char *filename, const char *content, int bytesToWrite);
+
 void createFileIfNotExists(const char *filename);
 
 #endif // FILES_H

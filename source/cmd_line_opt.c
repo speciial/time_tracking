@@ -1,6 +1,9 @@
 #include "cmd_line_opt.h"
 
+#include <stdlib.h>
 #include <string.h>
+
+#include "common_fnc.h"
 
 int clop_matchArgList(const char *arg, CLOPArgOptions *argOptions, int argCount)
 {
@@ -28,4 +31,9 @@ int clop_matchArg(const char *arg, CLOPArgOptions argOption)
     }
 
     return result;
+}
+
+int clop_parseIntArg(const char *arg)
+{
+    return stringToInt(arg);
 }

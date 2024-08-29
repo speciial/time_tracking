@@ -12,4 +12,6 @@ int clop_matchArgList(const char *arg, CLOPArgOptions *argOptions, int argCount)
 
 int clop_matchArg(const char *arg, CLOPArgOptions argOption);
 
+int clop_parseIntArg(const char *arg);
+
 #endif // CMD_LINE_OPT_H

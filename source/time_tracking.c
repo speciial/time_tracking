@@ -4,10 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <math.h>
 
+#include "common_fnc.h"
 #include "files.h"
 
 const char *RECORD_FILE_NAME = "record.ttr";
+const char *SETTINGS_FILE_NAME = "ttr.settings";
 
 void ttr_start()
 {
@@ -116,8 +119,15 @@ void ttr_show()
     }
 }
 
-void ttr_showMonth()
+void ttr_showMonth(int month)
 {
+    // NOTE: 0 means show everything.
+    if ((month < 0) || (month > 12))
+    {
+        printf("The filter has to be in the range of 0 - 12");
+        return;
+    }
+
     FileContent fileContent = readFullFile(RECORD_FILE_NAME);
 
     if (fileContent.sizeInBytes != 0)
@@ -131,9 +141,21 @@ void ttr_showMonth()
 
             if (timeTracking.start != 0 && timeTracking.end != 0)
             {
-                ttr_internal_printCompleteTracking(timeTracking);
+                if (month == 0)
+                {
+                    ttr_internal_printCompleteTracking(timeTracking);
+                }
+                else
+                {
+                    struct tm tmLocal = *localtime(&timeTracking.start);
+                    if (tmLocal.tm_mon == (month - 1))
+                    {
+                        ttr_internal_printCompleteTracking(timeTracking);
+                    }
+                }
             }
 
+            // Skip over the line that was just read
             while (fileContent.content[charIndex] != '\n' && charIndex < fileContent.sizeInBytes)
             {
                 charIndex++;
@@ -143,6 +165,47 @@ void ttr_showMonth()
     }
 
     freeFileContent(&fileContent);
+}
+
+void ttr_config(const char *setting, const char *value)
+{
+    createFileIfNotExists(SETTINGS_FILE_NAME);
+
+    TTRSettings ttrSettings = ttr_internal_loadSettings(SETTINGS_FILE_NAME);
+
+    if (strcmp(setting, "pausetime") == 0)
+    {
+        long pauseTime = (long)stringToInt(value);
+        if (pauseTime > 0)
+        {
+            ttrSettings.defaultPauseTime = pauseTime;
+        }
+        else
+        {
+            printf("Invalid pause time.");
+        }
+    }
+    else if (strcmp(setting, "format") == 0)
+    {
+        if (strcmp(value, "basic") == 0)
+        {
+            ttrSettings.format = BASIC;
+        }
+        else if (strcmp(value, "decimal") == 0)
+        {
+            ttrSettings.format = DECIMAL;
+        }
+        else
+        {
+            printf("Invalid format.");
+        }
+    }
+    else
+    {
+        printf("Invalid setting. The following are allowed: pausetime, format.");
+    }
+
+    ttr_internal_saveSettings(SETTINGS_FILE_NAME, ttrSettings);
 }
 
 TTRTimeTracking ttr_internal_parseLine(char *line)
@@ -223,7 +286,7 @@ TTRTimeTracking ttr_internal_parseLastRecordEntry(const char *fileName)
         }
         if (charIndex != 0)
         {
-            charIndex += 1; // skip over new line;
+            charIndex++; // skip over new line;
         }
 
         timeTracking = ttr_internal_parseLine(&fileContent.content[charIndex]);
@@ -231,6 +294,88 @@ TTRTimeTracking ttr_internal_parseLastRecordEntry(const char *fileName)
     freeFileContent(&fileContent);
 
     return timeTracking;
+}
+
+TTRSettings ttr_internal_loadSettings(const char *fileName)
+{
+    TTRSettings settings = {0};
+
+    FileContent fileContent = readFullFile(fileName);
+    if (fileContent.sizeInBytes > 0)
+    {
+        long charIndex = 0;
+        while (charIndex != fileContent.sizeInBytes && fileContent.content[charIndex] != 0)
+        {
+            // parse line
+            char setting_key[32] = {0};
+            char setting_value[32] = {0};
+
+            char *buffer = setting_key;
+            int bufferIndex = 0;
+            while ((charIndex != fileContent.sizeInBytes) &&
+                   (fileContent.content[charIndex] != 0) &&
+                   (fileContent.content[charIndex] != '\n'))
+            {
+                if (fileContent.content[charIndex] == ':')
+                {
+                    buffer = setting_value;
+                    bufferIndex = 0;
+                    charIndex++;
+                }
+
+                if (bufferIndex < 32)
+                {
+                    buffer[bufferIndex] = fileContent.content[charIndex];
+
+                    bufferIndex++;
+                    charIndex++;
+                }
+            }
+            charIndex++; // skip over new line;
+
+            // TODO: Should we check if the settings file is valid?
+            if (strcmp(setting_key, "pausetime") == 0)
+            {
+                long pauseTime = (long)stringToInt(setting_value);
+                if (pauseTime > 0)
+                {
+                    settings.defaultPauseTime = pauseTime;
+                }
+            }
+            else if (strcmp(setting_key, "format") == 0)
+            {
+                long format = (long)stringToInt(setting_value);
+                if (format == (long)BASIC)
+                {
+                    settings.format = BASIC;
+                }
+                else if (format == (long)DECIMAL)
+                {
+                    settings.format = DECIMAL;
+                }
+            }
+        }
+    }
+    else
+    {
+        printf("Couldn't parse setttings file.");
+    }
+    freeFileContent(&fileContent);
+
+    return settings;
+}
+
+void ttr_internal_saveSettings(const char *fileName, TTRSettings settings)
+{
+    // NOTE: Buffer size is fixed here since I don't have a better solution right now.
+    char bufferToWrite[512] = {0};
+
+    int charsWritten = sprintf(bufferToWrite, "pausetime:%d\nformat:%d", settings.defaultPauseTime, settings.format);
+
+    if (charsWritten > 0)
+    {
+        writeFullFile(SETTINGS_FILE_NAME, bufferToWrite, charsWritten);
+    }
 }
 
 struct tm ttr_internal_convertSecondsToTM(long seconds)
@@ -249,6 +394,8 @@ struct tm ttr_internal_convertSecondsToTM(long seconds)
 
 void ttr_internal_printStartTime(TTRTimeTracking timeTracking)
 {
+    TTRSettings settings = ttr_internal_loadSettings(SETTINGS_FILE_NAME);
+
     char startTimeString[13] = {0};
     strftime(startTimeString, 13, "%d.%m. %H:%M", localtime(&timeTracking.start));
 
@@ -266,30 +413,46 @@ void ttr_internal_printStartTime(TTRTimeTracking timeTracking)
     time_t currentTime = time(0);
     long elapsedTimeInSeconds = (long)difftime(currentTime, timeTracking.start) - pauseSecondsToSubstract;
 
-    struct tm elapsedTimeStruct = ttr_internal_convertSecondsToTM(elapsedTimeInSeconds);
-    char elapsedTimeString[6] = {0};
-    strftime(elapsedTimeString, 6, "%H:%M", &elapsedTimeStruct);
-
-    printf("[STARTED] %s, Worked for: %s\n", startTimeString, elapsedTimeString);
+    if (settings.format == BASIC)
+    {
+        int hours = (int)(elapsedTimeInSeconds / (60 * 60));
+        int minutes = (int)(((elapsedTimeInSeconds) - (hours * (60 * 60))) / 60);
+        printf("[STARTED] %s, Worked for: %.2d:%.2d\n", startTimeString, hours, minutes);
+    }
+    else if (settings.format == DECIMAL)
+    {
+        float fHours = ((float)elapsedTimeInSeconds) / (60.0f * 60.0f);
+        printf("[STARTED] %s, Worked for: %.2f\n", startTimeString, fHours);
+    }
 }
 
 void ttr_internal_printPauseTime(TTRTimeTracking timeTracking)
 {
+    TTRSettings settings = ttr_internal_loadSettings(SETTINGS_FILE_NAME);
+
     char pauseTimeString[13] = {0};
     strftime(pauseTimeString, 13, "%d.%m. %H:%M", localtime(&timeTracking.pauses[timeTracking.pauseCount - 1]));
 
     time_t currentTime = time(0);
     long elapsedTimeInSeconds = (long)difftime(currentTime, timeTracking.pauses[timeTracking.pauseCount - 1]);
 
-    struct tm elapsedTimeStruct = ttr_internal_convertSecondsToTM(elapsedTimeInSeconds);
-    char elapsedTimeString[6] = {0};
-    strftime(elapsedTimeString, 6, "%H:%M", &elapsedTimeStruct);
-
-    printf("[PAUSED] %s, Paused for: %s\n", pauseTimeString, elapsedTimeString);
+    if (settings.format == BASIC)
+    {
+        int hours = (int)(elapsedTimeInSeconds / (60 * 60));
+        int minutes = (int)(((elapsedTimeInSeconds) - (hours * (60 * 60))) / 60);
+        printf("[PAUSED] %s, Paused for: %.2d:%.2d\n", pauseTimeString, hours, minutes);
+    }
+    else if (settings.format == DECIMAL)
+    {
+        float fHours = ((float)elapsedTimeInSeconds) / (60.0f * 60.0f);
+        printf("[PAUSED] %s, Paused for: %.2f\n", pauseTimeString, fHours);
+    }
 }
 
 void ttr_internal_printCompleteTracking(TTRTimeTracking timeTracking)
 {
+    TTRSettings settings = ttr_internal_loadSettings(SETTINGS_FILE_NAME);
+
     char dayString[7] = {0};
     strftime(dayString, 7, "%d.%m.", localtime(&timeTracking.start));
 
@@ -311,15 +474,23 @@ void ttr_internal_printCompleteTracking(TTRTimeTracking timeTracking)
     }
 
     long elapsedTimeInSeconds = (long)difftime(timeTracking.end, timeTracking.start) - pauseSecondsToSubstract;
-    long netElapsedTimeInSeconds = elapsedTimeInSeconds - 45 * 60;
+    long netElapsedTimeInSeconds = elapsedTimeInSeconds - settings.defaultPauseTime * 60;
 
-    struct tm elapsedTimeStruct = ttr_internal_convertSecondsToTM(elapsedTimeInSeconds);
-    char elapsedTimeString[6] = {0};
-    strftime(elapsedTimeString, 6, "%H:%M", &elapsedTimeStruct);
+    if (settings.format == BASIC)
+    {
+        int hours = (int)(elapsedTimeInSeconds / (60 * 60));
+        int minutes = (int)(((elapsedTimeInSeconds) - (hours * (60 * 60))) / 60);
 
-    struct tm netElapsedTimeStruct = ttr_internal_convertSecondsToTM(netElapsedTimeInSeconds);
-    char netElapsedTimeString[6] = {0};
-    strftime(netElapsedTimeString, 6, "%H:%M", &netElapsedTimeStruct);
+        int netHours = (int)max(0, ((netElapsedTimeInSeconds / (60 * 60))));
+        int netMinutes = (int)max(0, ((((netElapsedTimeInSeconds) - (netHours * (60 * 60))) / 60)));
 
-    printf("%s, %s - %s, Total Time: %s, Net Time: %s\n", dayString, startTimeString, endTimeString, elapsedTimeString, netElapsedTimeString);
+        printf("%s, %s - %s, Total Time: %.2d:%.2d, Net Time: %.2d:%.2d\n", dayString, startTimeString, endTimeString, hours, minutes, netHours, netMinutes);
+    }
+    else if (settings.format == DECIMAL)
+    {
+        float fHours = ((float)elapsedTimeInSeconds) / (60.0f * 60.0f);
+        float fNetHours = fmaxf(0, ((float)netElapsedTimeInSeconds) / (60.0f * 60.0f));
+
+        printf("%s, %s - %s, Total Time: %.2f, Net Time: %.2f\n", dayString, startTimeString, endTimeString, fHours, fNetHours);
+    }
 }
