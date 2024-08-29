@@ -370,7 +370,7 @@ void ttr_internal_saveSettings(const char *fileName, TTRSettings settings)
     // NOTE: Buffer size is fixed here since I don't have a better solution right now.
     char bufferToWrite[512] = {0};
 
-    int charsWritten = sprintf(bufferToWrite, "pausetime:%d\nformat:%d", settings.defaultPauseTime, settings.format);
+    int charsWritten = sprintf(bufferToWrite, "pausetime:%ld\nformat:%d", settings.defaultPauseTime, settings.format);
 
     if (charsWritten > 0)
     {

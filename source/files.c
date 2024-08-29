@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void freeFileContent(FileContent *fileContent)
 {
@@ -46,7 +47,7 @@ FileContent readFullFile(const char *filename)
         {
             content = 0;
             sizeInBytes = 0;
-            printf("Could not allocate requested size: %d\n", sizeInBytes);
+            printf("Could not allocate requested size: %ld\n", sizeInBytes);
         }
         memset(content, 0, sizeInBytes + 1);
 
@@ -56,7 +57,7 @@ FileContent readFullFile(const char *filename)
             free(content);
             content = 0;
             sizeInBytes = 0;
-            printf("Bytes read exceeds bytes allocated: %d, %zu\n", sizeInBytes, bytesRead);
+            printf("Bytes read exceeds bytes allocated: %ld, %zu\n", sizeInBytes, bytesRead);
         }
 
         result.content = content;

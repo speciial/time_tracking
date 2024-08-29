@@ -1,5 +1,8 @@
 #include "common_fnc.h"
 
+#include <stdlib.h>
+#include <stdio.h>
+
 int stringToInt(const char *string)
 {
     // NOTE: This works for now but there are multiple issues with this implementation:
