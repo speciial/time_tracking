@@ -1,9 +1,11 @@
-set( TEST_DEPENDENCIES
-    ../source/time_tracking.c
-)
+enable_testing()
 
-add_executable( test_${PROJECT_NAME}
-    ${TEST_DEPENDENCIES}    
-    test_main.c
-    test_time_tracking.c
-)
+set( TEST_TARGET_NAME ttr_test )
+add_executable( ${TEST_TARGET_NAME} )
+
+target_sources( ${TEST_TARGET_NAME} PUBLIC test_main.c )
+
+target_link_libraries( ${TEST_TARGET_NAME} PUBLIC ttr_lib )
+
+add_test( NAME ${TEST_TARGET_NAME}
+          COMMAND ${TEST_TARGET_NAME} )

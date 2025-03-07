@@ -1,0 +1,63 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "ttr start",
+            "type": "cppvsdbg",
+            "request": "launch",
+            "program": "${command:cmake.launchTargetPath}",
+            "args": [
+                "${input:command}"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/data",
+            "environment": [
+                {
+                    "name": "PATH",
+                    "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+                }
+            ],
+        }
+    ],
+    "inputs": [
+        {
+            "type": "pickString",
+            "id": "command",
+            "default": "--show",
+            "description": "Command to be executed",
+            "options": [
+                {
+                    "label": "show",
+                    "value": "--show"
+                },
+                {
+                    "label": "start",
+                    "value": "--start"
+                },
+                {
+                    "label": "end",
+                    "value": "--end"
+                },
+                {
+                    "label": "pause",
+                    "value": "--pause"
+                },
+                {
+                    "label": "unpause",
+                    "value": "--unpause"
+                },
+                {
+                    "label": "show-month",
+                    "value": "--show-month"
+                },
+                {
+                    "label": "config",
+                    "value": "--config"
+                },
+            ]
+        }
+    ]
+}

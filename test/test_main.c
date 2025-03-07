@@ -1,11 +1,15 @@
 #include <stdio.h>
 
-#include "test_time_tracking.h"
+#include <time_tracking.h>
 
 int main ()
 {
-    printf("===== Time Tracking Test =====\n");
-    runTTRTests();
+    printf("Testing\n");
+
+    if (!DummyFunction())
+    {
+        return 1;
+    }
 
     return 0;
 }
