@@ -1,6 +1,9 @@
 set( TIME_TRACKING_LIB_TARGET ttr_lib )
 add_library( ${TIME_TRACKING_LIB_TARGET} )
 
-target_sources( ${TIME_TRACKING_LIB_TARGET} PUBLIC time_tracking.c )
+target_sources( ${TIME_TRACKING_LIB_TARGET} PUBLIC time_tracking.c tokenizer.c )
 
 target_include_directories( ${TIME_TRACKING_LIB_TARGET} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} )
+
+add_subdirectory( base )
+target_link_libraries( ${TIME_TRACKING_LIB_TARGET} PUBLIC base_lib )
