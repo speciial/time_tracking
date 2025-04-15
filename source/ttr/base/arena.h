@@ -7,10 +7,6 @@
 #include <stdalign.h>
 #include <assert.h>
 
-#define KB(Value) ((Value) * 1024)
-#define MB(Value) (KB(Value) * 1024)
-#define GB(Value) (MB(Value) * 1024)
-
 // NOTE(speciial): Stolen from https://nullprogram.com/blog/2023/09/27/ :)
 
 typedef struct _arena
@@ -22,6 +18,8 @@ typedef struct _arena
 #define PushStruct(Arena, Type, Count) ((Type *)ArenaAlloc(Arena, sizeof(Type), alignof(Type), Count))
 
 arena NewArena(int Capacity);
+
+arena NewScratchArena();
 
 void *ArenaAlloc(arena *Arena, int Size, int Align, int Count);
 

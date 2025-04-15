@@ -1,10 +1,20 @@
 #include "arena.h"
 
+#include "defines.h"
+
+#define DEFAULT_SCRATCH_SIZE KB(2)
+
 arena NewArena(int Capacity)
 {
     arena Result = { 0 };
     Result.Begin = malloc(Capacity);
     Result.End = Result.Begin ? Result.Begin + Capacity : 0;
+    return Result;
+}
+
+arena NewScratchArena()
+{
+    arena Result = NewArena(DEFAULT_SCRATCH_SIZE);
     return Result;
 }
 

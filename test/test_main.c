@@ -4,6 +4,7 @@
 
 #include <assert.h>
 
+#include <defines.h>
 #include <arena.h>
 #include <time_tracking.h>
 
@@ -19,27 +20,7 @@ void TestReadRecordFile()
     int AllocatedMemory = (int)(Arena.Begin - ArenaStart);
     printf("Allocated Arena Space: %dkb\n", AllocatedMemory / 1024);
 
-    while (Records)
-    {
-        printf("Year: %d, Month: %d\n", Records->Year, Records->Month);
-
-        for (int RecordIndex = 0; RecordIndex < DAYS_PER_MONTH; ++RecordIndex)
-        {
-            ttr_record CurrentRecord = Records->Records[RecordIndex];
-            if (CurrentRecord.Used)
-            {
-                printf("\tStart: %d, End: %d - [", CurrentRecord.Work.Start, CurrentRecord.Work.End);
-                for (int PauseIndex = 0; PauseIndex < CurrentRecord.PauseCount; ++PauseIndex)
-                {
-                    printf("Start: %d, End: %d; ", CurrentRecord.Pauses[PauseIndex].Start, CurrentRecord.Pauses[PauseIndex].End);
-                }
-                printf("]\n");
-            }
-        }
-
-        Records = Records->NextMonth;
-    }
-
+    WriteRecordFile(&Arena, "some_file_name", Records);
 }
 
 int main()

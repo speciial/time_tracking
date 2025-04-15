@@ -19,5 +19,13 @@ time_t TimestampFromDateTime(int Year, int Month, int Day, int Hour, int Minute)
 date_time DateTimeFromTimestamp(time_t Timestamp)
 {
     date_time Result = {0};
+
+    struct tm ConvertedTime = *localtime(&Timestamp);
+    Result.Year = ConvertedTime.tm_year;
+    Result.Month = ConvertedTime.tm_mon;
+    Result.Day = ConvertedTime.tm_mday;
+    Result.Hour = ConvertedTime.tm_hour;
+    Result.Minute = ConvertedTime.tm_min;
+    
     return Result;
 }

@@ -30,6 +30,7 @@ typedef struct _ttr_record
     ttr_interval Pauses[MAX_PAUSE_COUNT];
 } ttr_record;
 
+// TODO(speciial): Make this a node of a list and implement a list (see string_list)
 typedef struct _ttr_record_list
 {
     unsigned int Year;

@@ -2,35 +2,17 @@
 
 #include "tokenizer.h"
 
+#include <defines.h>
+#include <strings.h>
 #include <files.h>
 #include <time_and_date.h>
-
-// TODO(speciial): Use stdint 
-
-// TODO(speciial): Move this to base
-#define ArrayCount(Array) (sizeof(Array) / sizeof(Array[0]))
-
-// TODO(speciial): Move this to base
-int StringToInt(char *String, int Size)
-{
-    int Index = 0;
-    while (*String == '0' && Index < Size)
-    {
-        ++String;
-        ++Index;
-    }
-
-    char *End = (char *)(String + Size);
-    int Result = strtol(String, &End, 10);
-    return Result;
-}
 
 time_t ParseTime(tokenizer *Tokenizer, int Year, int Month, int Day)
 {
     token CurrentToken = EatNextToken(Tokenizer);
     int Hour = CurrentToken.Data.IntValue;
 
-    EatNextToken(Tokenizer); // Skip colon
+    RequireTokenAndEat(Tokenizer, Token_Colon);
     CurrentToken = EatNextToken(Tokenizer);
     int Minute = CurrentToken.Data.IntValue;
 
@@ -179,7 +161,6 @@ ttr_record_list *ReadRecordFile(arena *Arena, const char *Filename)
                         token YearToken = PeekToken(&Tokenizer, 1);
                         token MonthToken = PeekToken(&Tokenizer, 3);
 
-                        // NOTE(speciial): We could check if we're actually skip to the next month
                         if (CurrentYear != YearToken.Data.IntValue ||
                             CurrentMonth != MonthToken.Data.IntValue)
                         {
@@ -224,7 +205,83 @@ ttr_record_list *ReadRecordFile(arena *Arena, const char *Filename)
     return Result;
 }
 
+string WriteFormattedInterval(arena *Arena, ttr_interval Interval)
+{
+    string Result = { 0 };
+
+    char *CompleteIntervalFormat = "(%02d:%02d,%02d:%02d)";
+    char *IncompleteIntervalFormat = "(%02d:%02d,_)";
+
+    date_time WorkStart = DateTimeFromTimestamp(Interval.Start);
+    if (Interval.End != 0)
+    {
+        date_time WorkEnd = DateTimeFromTimestamp(Interval.End);
+        Result = StringFormat(Arena, CompleteIntervalFormat,
+                              WorkStart.Hour, WorkStart.Minute,
+                              WorkEnd.Hour, WorkEnd.Minute);
+    }
+    else
+    {
+        Result = StringFormat(Arena, IncompleteIntervalFormat,
+                              WorkStart.Hour, WorkStart.Minute);
+    }
+
+    return Result;
+}
+
+string WriteFormattedRecord(arena *Arena, ttr_record *Record, int Year, int Month, int Day)
+{
+    string Result = { 0 };
+    arena Scratch = NewScratchArena();
+
+    // Work hours
+    string WorkTimeString = WriteFormattedInterval(&Scratch, Record->Work);
+
+    // Pause timers
+    string PauseTimersString;
+    for (int PauseIndex = 0; PauseIndex < Record->PauseCount; ++PauseIndex)
+    {
+        string PauseInterval = WriteFormattedInterval(&Scratch, Record->Pauses[PauseIndex]);
+
+        if (PauseIndex == 0)
+        {
+            PauseTimersString = PauseInterval;
+        }
+        else
+        {
+            PauseTimersString = StringConcat(&Scratch, PauseTimersString, PauseInterval);
+        }
+    }
+
+    char *FinalFormat = "%02d/%02d/%02d{%s[%s]};\n";
+    Result = StringFormat(Arena, FinalFormat, Year, Month, Day, WorkTimeString.Content, PauseTimersString.Content);
+
+    // NOTE(speciial): Currently, scratch arenas leak. I'll change my approach to arenas later. 
+    // ArenaFree(&Scratch);
+    
+    return Result;
+}
+
 void WriteRecordFile(arena *Arena, const char *Filename, ttr_record_list *Records)
 {
+    string_list RecordStringList = { 0 };
 
+    ttr_record_list *CurrentMonth = Records;
+    while (CurrentMonth)
+    {
+        for (int Day = 0; Day < DAYS_PER_MONTH; ++Day)
+        {
+            if (CurrentMonth->Records[Day].Used)
+            {
+                string WrittenRecord = WriteFormattedRecord(Arena, &CurrentMonth->Records[Day],
+                                                            CurrentMonth->Year, CurrentMonth->Month, Day);
+                StringListAppend(Arena, &RecordStringList, WrittenRecord);
+            }
+        }
+        CurrentMonth = CurrentMonth->NextMonth;
+    }
+    
+    string RecordsToWrite = StringListToString(Arena, &RecordStringList);
+
+    WriteFile("out_record.ttr", RecordsToWrite.Content, RecordsToWrite.Length);
 }
