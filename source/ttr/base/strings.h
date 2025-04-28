@@ -29,6 +29,8 @@ void StringListAppend(arena *Arena, string_list *StringList, string String);
 
 string StringListToString(arena *Arena, string_list *StringList);
 
+void StringCopy(char *Destination, int DestinationSize, char *Source, int SourceSize);
+
 string StringConcat(arena *Arena, string A, string B);
 
 string StringFormat(arena *Arena, char *Format, ...);

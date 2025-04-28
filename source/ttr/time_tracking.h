@@ -30,8 +30,7 @@ typedef struct _ttr_record
     ttr_interval Pauses[MAX_PAUSE_COUNT];
 } ttr_record;
 
-// TODO(speciial): Make this a node of a list and implement a list (see string_list)
-typedef struct _ttr_record_list
+typedef struct _ttr_record_list_node
 {
     unsigned int Year;
     unsigned int Month;
@@ -39,11 +38,46 @@ typedef struct _ttr_record_list
     unsigned int RecordCountPerMonth;
     ttr_record Records[DAYS_PER_MONTH];
 
-    struct _ttr_record_list *NextMonth;
+    struct _ttr_record_list_node *NextMonth;
+} ttr_record_list_node;
+
+typedef struct _ttr_record_list
+{
+    ttr_record_list_node *First;
+    ttr_record_list_node *Last;
+    int Count;
 } ttr_record_list;
 
-ttr_record_list *ReadRecordFile(arena *Arena, const char *Filename);
+// ========================================
+//  Reading Record Files
+// ========================================
 
-void WriteRecordFile(arena *Arena, const char *Filename, ttr_record_list *Records);
+ttr_record_list ReadRecordFile(arena *Arena, const char *Filename);
+
+void ParseRecords(arena *Arena, tokenizer *Tokenizer, ttr_record_list *RecordList);
+
+void ParseWorkDay(tokenizer *Tokenizer, ttr_record_list_node *RecordListNode,
+                  int Year, int Month, int Day);
+
+void ParsePauses(tokenizer *Tokenizer, ttr_record *OutRecord,
+                 int Year, int Month, int Day);
+
+ttr_interval ParseInterval(tokenizer *Tokenizer, int Year, int Month, int Day);
+
+ttr_day ParseDay(tokenizer *Tokenizer);
+
+time_t ParseTime(tokenizer *Tokenizer, int Year, int Month, int Day);
+
+void RecordListPush(arena *Arena, ttr_record_list *RecordList);
+
+// ========================================
+//  Writing Record Files
+// ========================================
+
+void WriteRecordFile(arena *Arena, const char *Filename, ttr_record_list Records);
+
+string WriteFormattedRecord(arena *Arena, ttr_record *Record, int Year, int Month, int Day);
+
+string WriteFormattedInterval(arena *Arena, ttr_interval Interval);
 
 #endif // time_tracking_H

@@ -48,6 +48,11 @@ string StringListToString(arena *Arena, string_list *StringList)
     return Result;
 }
 
+void StringCopy(char *Destination, int DestinationSize, char *Source, int SourceSize)
+{
+    strncpy_s(Destination, DestinationSize, Source, SourceSize);
+}
+
 string StringConcat(arena *Arena, string A, string B)
 {
     string Result = { 0 };

@@ -4,7 +4,7 @@
 
 #include <assert.h>
 
-#include <defines.h>
+#include <common.h>
 #include <arena.h>
 #include <time_tracking.h>
 
@@ -15,7 +15,7 @@ void TestReadRecordFile()
     arena Arena = NewArena(KB(30));
     char *ArenaStart = Arena.Begin;
 
-    ttr_record_list *Records = ReadRecordFile(&Arena, RecordFileName);
+    ttr_record_list Records = ReadRecordFile(&Arena, RecordFileName);
 
     int AllocatedMemory = (int)(Arena.Begin - ArenaStart);
     printf("Allocated Arena Space: %dkb\n", AllocatedMemory / 1024);

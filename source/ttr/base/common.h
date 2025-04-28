@@ -1,5 +1,7 @@
-#ifndef defines_H
-#define defines_H
+#ifndef common_H
+#define common_H
+
+#include <stdint.h>
 
 // TODO(speciial): Use stdint 
 
@@ -9,4 +11,6 @@
 
 #define ArrayCount(Array) (sizeof(Array) / sizeof(Array[0]))
 
-#endif // defines_H
+void PrintFormatString(const char *Format, ...);
+
+#endif // common_H

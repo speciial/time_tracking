@@ -1,5 +1,8 @@
 #include "tokenizer.h"
 
+#include <common.h>
+#include <strings.h>
+
 bool IsWhitespace(char C)
 {
     bool Result = ((C == ' ') ||
@@ -62,6 +65,7 @@ token PeekNextToken(tokenizer *Tokenizer)
                 ++TextLength;
                 ++CurrentToken;
             }
+            Result.Type = Token_Number;
             Result.Data.IntValue = StringToInt(Tokenizer->At, TextLength);
             Result.TextLength = TextLength;
         } break;
@@ -98,11 +102,19 @@ bool RequireTokenPattern(tokenizer *Tokenizer, token_type *TokenPattern, int Tok
 {
     bool Result = true;
 
+    EatAllWhitespace(Tokenizer);
+
     for (int TokenIndex = 0; TokenIndex < TokenCount; ++TokenIndex)
     {
         token CurrentToken = PeekToken(Tokenizer, (TokenIndex + 1));
         if (CurrentToken.Type != TokenPattern[TokenIndex])
         {
+            for (int ErrorIndex = 0; ErrorIndex < (TokenIndex + 1); ++ErrorIndex)
+            {
+                EatNextToken(Tokenizer);
+            }
+            PlaceError(Tokenizer, TokenPattern[TokenIndex], CurrentToken.Type);
+
             Result = false;
             break;
         }
@@ -113,14 +125,63 @@ bool RequireTokenPattern(tokenizer *Tokenizer, token_type *TokenPattern, int Tok
 
 bool RequireToken(tokenizer *Tokenizer, token_type DesiredType)
 {
-    // TODO(speciial): Write tokenizer error and exit program
-    token Token = PeekNextToken(Tokenizer);
-    return (Token.Type == DesiredType);
+    token CurrentToken = PeekNextToken(Tokenizer);
+    bool Result = CurrentToken.Type == DesiredType;
+    if (!Result)
+    {
+        PlaceError(Tokenizer, DesiredType, CurrentToken.Type);
+    }
+    return Result;
 }
 
 bool RequireTokenAndEat(tokenizer *Tokenizer, token_type DesiredType)
 {
-    // TODO(speciial): Write tokenizer error and exit program
-    token Token = EatNextToken(Tokenizer);
-    return (Token.Type == DesiredType);
+    token CurrentToken = EatNextToken(Tokenizer);
+    bool Result = CurrentToken.Type == DesiredType;
+    if (!Result)
+    {
+        PlaceError(Tokenizer, DesiredType, CurrentToken.Type);
+    }
+    return Result;
+}
+
+void PlaceError(tokenizer *Tokenizer, token_type ExpectedToken, token_type ReceivedToken)
+{
+    if (!Tokenizer->HasError)
+    {
+        int CharLeftOffset = 4;
+        int CharRightOffset = 4;
+        if (Tokenizer->Char < CharLeftOffset)
+        {
+            CharLeftOffset = Tokenizer->Char;
+        }
+        for (int CharIndex = 0; CharIndex < CharRightOffset; ++CharIndex)
+        {
+            if (Tokenizer->At[CharIndex] == '\r' ||
+                Tokenizer->At[CharIndex] == '\n' ||
+                Tokenizer->At[CharIndex] == '\0')
+            {
+                CharRightOffset = CharIndex - 1;
+                break;
+            }
+        }
+
+        char FileContentBuffer[16] = { 0 };
+        StringCopy(FileContentBuffer, 16, Tokenizer->At -
+                   CharLeftOffset, CharLeftOffset + CharRightOffset);
+        
+        PrintFormatString("Error in line %d, char %d\n", Tokenizer->Line, Tokenizer->Char);
+        PrintFormatString("\t%s\n", FileContentBuffer);
+        PrintFormatString("\t%*s\n", CharLeftOffset, "^");
+        
+        // TODO(speciial): Print Token_Number properly!
+        PrintFormatString("\t%*s %c %s %c\n", CharLeftOffset, "Expected", ExpectedToken, "but got", ReceivedToken);
+
+        token CurrentToken = PeekNextToken(Tokenizer);
+        while (CurrentToken.Type != Token_EndOfStream)
+        {
+            CurrentToken = EatNextToken(Tokenizer);
+        }
+        Tokenizer->HasError = true;
+    }
 }

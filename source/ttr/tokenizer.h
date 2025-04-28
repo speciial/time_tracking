@@ -5,19 +5,20 @@
 
 typedef enum
 {
-    Token_Number,
-    Token_Slash,
-    Token_OpenBrace,
-    Token_CloseBrace,
-    Token_OpenParen,
-    Token_CloseParen,
-    Token_OpenBracket,
-    Token_CloseBracket,
-    Token_Colon,
-    Token_Semicolon,
-    Token_Comma,
-    Token_Underscore,
-    Token_EndOfStream
+    Token_Slash = '/',
+    Token_OpenBrace = '{',
+    Token_CloseBrace = '}',
+    Token_OpenParen = '(',
+    Token_CloseParen = ')',
+    Token_OpenBracket = '[',
+    Token_CloseBracket = ']',
+    Token_Colon = ':',
+    Token_Semicolon = ';',
+    Token_Comma = ',',
+    Token_Underscore = '_',
+    
+    Token_Number = 256,
+    Token_EndOfStream = 257
 } token_type;
 
 typedef struct
@@ -39,6 +40,18 @@ typedef struct
     char *At;
     int Line;
     int Char;
+
+    token_type ExpectedToken;
+    token_type ReceivedToken;
+} tokenizer_error;
+
+typedef struct
+{
+    char *At;
+    int Line;
+    int Char;
+
+    bool HasError;
 } tokenizer;
 
 bool IsWhitespace(char C);
@@ -56,5 +69,7 @@ bool RequireTokenPattern(tokenizer *Tokenizer, token_type *TokenPattern, int Tok
 bool RequireToken(tokenizer *Tokenizer, token_type DesiredType);
 
 bool RequireTokenAndEat(tokenizer *Tokenizer, token_type DesiredType);
+
+void PlaceError(tokenizer *Tokenizer, token_type ExpectedToken, token_type ReceivedToken);
 
 #endif // tokenizer_H

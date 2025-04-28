@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 
+// TODO(speciial): Use arena and strings here
 typedef struct
 {
     char *Content;

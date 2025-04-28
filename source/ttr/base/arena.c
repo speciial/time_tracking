@@ -1,6 +1,6 @@
 #include "arena.h"
 
-#include "defines.h"
+#include "common.h"
 
 #define DEFAULT_SCRATCH_SIZE KB(2)
 
