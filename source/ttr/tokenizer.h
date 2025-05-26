@@ -35,7 +35,7 @@ typedef struct
     char *Text;
 } token;
 
-typedef struct
+typedef struct _tokenizer_error
 {
     char *At;
     int Line;
@@ -45,13 +45,14 @@ typedef struct
     token_type ReceivedToken;
 } tokenizer_error;
 
-typedef struct
+typedef struct _tokenizer
 {
     char *At;
     int Line;
     int Char;
 
     bool HasError;
+    tokenizer_error Error;
 } tokenizer;
 
 bool IsWhitespace(char C);

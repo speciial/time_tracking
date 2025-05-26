@@ -1,9 +1,6 @@
 #include "time_tracking.h"
 
-#include "tokenizer.h"
-
 #include <common.h>
-#include <strings.h>
 #include <files.h>
 #include <time_and_date.h>
 
@@ -26,6 +23,7 @@ ttr_record_list ReadRecordFile(arena *Arena, const char *Filename)
                 Result.First = 0;
                 Result.Last = 0;
                 Result.Count = 0;
+                Result.Invalid = true;
             }
 
             FreeFileContent(&Content);
@@ -147,6 +145,7 @@ ttr_interval ParseInterval(tokenizer *Tokenizer, int Year, int Month, int Day)
             else
             {
                 RequireTokenAndEat(Tokenizer, Token_Underscore);
+                Result.Incomplete = true;
             }
             RequireTokenAndEat(Tokenizer, Token_CloseParen);
         }
@@ -194,6 +193,7 @@ time_t ParseTime(tokenizer *Tokenizer, int Year, int Month, int Day)
         CurrentToken = EatNextToken(Tokenizer);
         int Minute = CurrentToken.Data.IntValue;
 
+        // TODO(speciial): This can fail if there is an invalid time being used!
         Result = TimestampFromDateTime(Year, Month, Day, Hour, Minute);
     }
 

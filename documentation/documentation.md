@@ -25,5 +25,10 @@ Error Handling was more about me playing around with parsing. Since the files sh
 
 What I'm essentially doing, is testing for a required token or range of required tokens. If I encounter a token I didn't expect, I forward the tokenizer to the end of the file and fall through the chain of parsing. I also print out the location of the error that occured during parsing. 
 
+TODO(speciial): Semantic error handling! Right now, things like invalid dates and times or too many pauses are not being checked.
+
 ### Writing
 Writing the file back to disc is about as simple as it gets. I just iterate through all records and write them out using a formatted string.
+
+## Data Structure
+TODO(speciial): There are a lot of things very specific to what I'm trying to do here. Like Day being an index into an array, separation into months, etc.

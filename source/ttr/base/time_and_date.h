@@ -23,4 +23,6 @@ time_t TimestampFromDateTime(int Year, int Month, int Day, int Hour, int Minute)
 
 date_time DateTimeFromTimestamp(time_t Timestamp);
 
+// TODO(speciial): IsWorkWeekDay(int Year, int Month, int Day);
+
 #endif // time_and_date_H

@@ -54,9 +54,18 @@ token PeekNextToken(tokenizer *Tokenizer)
         case ':': { Result.Type = Token_Colon; } break;
         case ',': { Result.Type = Token_Comma; } break;
         case ';': { Result.Type = Token_Semicolon; } break;
-        default:
+        
+        case '0': 
+        case '1': 
+        case '2': 
+        case '3': 
+        case '4': 
+        case '5': 
+        case '6': 
+        case '7': 
+        case '8': 
+        case '9': 
         {
-            // Parse Number
             char *CurrentToken = Tokenizer->At;
             int TextLength = 0;
             while (CurrentToken[0] != '\0' &&
@@ -68,6 +77,12 @@ token PeekNextToken(tokenizer *Tokenizer)
             Result.Type = Token_Number;
             Result.Data.IntValue = StringToInt(Tokenizer->At, TextLength);
             Result.TextLength = TextLength;
+        } break;
+
+        default:
+        {
+            PrintFormatString("Unknown Token: %c\n", Tokenizer->At[0]);
+            // PlaceError(Tokenizer, '?', Tokenizer->At[0]);
         } break;
     }
     return Result;
@@ -85,14 +100,24 @@ token PeekToken(tokenizer *Tokenizer, int Offset)
 {
     token Result = { 0 };
 
-    tokenizer Copy = *Tokenizer;
+    char *At = Tokenizer->At;
+    int Line = Tokenizer->Line;
+    int Char = Tokenizer->Char;
+
     for (int SkipIndex = 0; SkipIndex < Offset; ++SkipIndex)
     {
-        Result = EatNextToken(&Copy);
+        Result = EatNextToken(Tokenizer);
         if (Result.Type == Token_EndOfStream)
         {
             break;
         }
+    }
+
+    if (!Tokenizer->HasError)
+    {
+        Tokenizer->At = At;
+        Tokenizer->Line = Line;
+        Tokenizer->Char = Char;
     }
 
     return Result;
@@ -109,7 +134,9 @@ bool RequireTokenPattern(tokenizer *Tokenizer, token_type *TokenPattern, int Tok
         token CurrentToken = PeekToken(Tokenizer, (TokenIndex + 1));
         if (CurrentToken.Type != TokenPattern[TokenIndex])
         {
-            for (int ErrorIndex = 0; ErrorIndex < (TokenIndex + 1); ++ErrorIndex)
+            // Advance the tokenizer to the place in the pattern where the 
+            // token mismatch occured.
+            for (int ErrorIndex = 0; ErrorIndex < TokenIndex; ++ErrorIndex)
             {
                 EatNextToken(Tokenizer);
             }
@@ -176,6 +203,12 @@ void PlaceError(tokenizer *Tokenizer, token_type ExpectedToken, token_type Recei
         
         // TODO(speciial): Print Token_Number properly!
         PrintFormatString("\t%*s %c %s %c\n", CharLeftOffset, "Expected", ExpectedToken, "but got", ReceivedToken);
+
+        Tokenizer->Error.At = Tokenizer->At;
+        Tokenizer->Error.Char = Tokenizer->Char;
+        Tokenizer->Error.Line = Tokenizer->Line;
+        Tokenizer->Error.ExpectedToken = ExpectedToken;
+        Tokenizer->Error.ReceivedToken = ReceivedToken;
 
         token CurrentToken = PeekNextToken(Tokenizer);
         while (CurrentToken.Type != Token_EndOfStream)
