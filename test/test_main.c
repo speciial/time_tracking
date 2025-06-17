@@ -126,7 +126,18 @@ void TestReadRecordFileInternal()
 
 TestReadRecordFileStressTest()
 {
-    // TODO(speciial): Implement
+    arena Arena = NewArena(MB(50));
+
+    clock_t begin = clock();
+
+    const char *LargeRecordFileName = "large_record.ttr";
+    ttr_record_list LargeRecords = ReadRecordFile(&Arena, LargeRecordFileName);
+    assert(false == LargeRecords.Invalid);
+    
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+
+    PrintFormatString("Reading & Parsing: %fs\n", time_spent);
 }
 
 
@@ -144,6 +155,8 @@ int main()
 {
     printf("Time Tracking Test\n");
 
+    clock_t begin = clock();
+
     TestReadRecordFile();
 
     TestReadRecordFileInternal();
@@ -153,6 +166,11 @@ int main()
     TestWriteRecordFile();
 
     TestWriteRecrodFileStressTest();
+
+    clock_t end = clock();
+    double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+
+    PrintFormatString("Total: %fs\n", time_spent);
 
     return 0;
 }
