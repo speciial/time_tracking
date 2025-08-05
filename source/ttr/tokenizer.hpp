@@ -1,8 +1,6 @@
 #ifndef tokenizer_H
 #define tokenizer_H
 
-#include <stdbool.h>
-
 typedef enum
 {
     Token_Slash = '/',
@@ -71,6 +69,7 @@ bool RequireToken(tokenizer *Tokenizer, token_type DesiredType);
 
 bool RequireTokenAndEat(tokenizer *Tokenizer, token_type DesiredType);
 
-void PlaceError(tokenizer *Tokenizer, token_type ExpectedToken, token_type ReceivedToken);
+// TODO(speciial): Move error handling to the usage code!
+// void PlaceError(tokenizer *Tokenizer, token_type ExpectedToken, token_type ReceivedToken);
 
 #endif // tokenizer_H

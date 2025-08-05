@@ -1,13 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <time.h>
-
 #include <assert.h>
 
-#include <common.h>
-#include <arena.h>
-#include <time_tracking.h>
-#include <tokenizer.h>
+#include <time_tracking.hpp>
+#include <tokenizer.hpp>
+
+#include <common.hpp>
+#include <base_arena.hpp>
+#include <base_strings.hpp>
 
 void TestReadRecordFile()
 {
@@ -124,7 +126,7 @@ void TestReadRecordFileInternal()
 
 }
 
-TestReadRecordFileStressTest()
+void TestReadRecordFileStressTest()
 {
     arena Arena = NewArena(MB(50));
 
@@ -137,7 +139,7 @@ TestReadRecordFileStressTest()
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
-    PrintFormatString("Reading & Parsing: %fs\n", time_spent);
+    printf("Reading & Parsing: %fs\n", time_spent);
 }
 
 
@@ -146,7 +148,7 @@ void TestWriteRecordFile()
     // TODO(speciial): Implement
 }
 
-TestWriteRecrodFileStressTest()
+void TestWriteRecrodFileStressTest()
 {
     // TODO(speciial): Implement
 }
@@ -170,7 +172,7 @@ int main()
     clock_t end = clock();
     double time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
 
-    PrintFormatString("Total: %fs\n", time_spent);
+    printf("Total: %fs\n", time_spent);
 
     return 0;
 }

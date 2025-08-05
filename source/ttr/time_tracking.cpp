@@ -1,21 +1,21 @@
-#include "time_tracking.h"
+#include "time_tracking.hpp"
 
-#include <common.h>
-#include <files.h>
-#include <time_and_date.h>
+#include <common.hpp>
+#include <base_files.hpp>
+#include <base_datetime.hpp>
 
 ttr_record_list ReadRecordFile(arena *Arena, const char *Filename)
 {
-    ttr_record_list Result = { 0 };
+    ttr_record_list Result = {};
 
     if (FileExists(Filename))
     {
         // TODO(speciial): Make files use strings and arenas.
-        file_content Content = { 0 };
-        if (ReadFile(&Content, Filename))
+        string FileContent = ReadFile(Arena, Filename);
+        if (FileContent.Content)
         {
-            tokenizer Tokenizer = { 0 };
-            Tokenizer.At = Content.Content;
+            tokenizer Tokenizer = {};
+            Tokenizer.At = FileContent.Content;
 
             ParseRecords(Arena, &Tokenizer, &Result);
             if (Tokenizer.HasError)
@@ -25,8 +25,6 @@ ttr_record_list ReadRecordFile(arena *Arena, const char *Filename)
                 Result.Count = 0;
                 Result.Invalid = true;
             }
-
-            FreeFileContent(&Content);
         }
         else
         {
@@ -35,8 +33,8 @@ ttr_record_list ReadRecordFile(arena *Arena, const char *Filename)
     }
     else
     {
-        printf("Creating new record file.\n");
-        FileCreate(Filename);
+        // TODO(speciial): Should we log this case to the user/console?
+        CreateFile(Filename);
     }
 
     return Result;
@@ -44,7 +42,7 @@ ttr_record_list ReadRecordFile(arena *Arena, const char *Filename)
 
 void ParseRecords(arena *Arena, tokenizer *Tokenizer, ttr_record_list *RecordList)
 {
-    ttr_day LastDay = { 0 };
+    ttr_day LastDay = {};
     ttr_record_list_node *CurrentListNode;
 
     bool Parsing = true;
@@ -127,7 +125,7 @@ void ParsePauses(tokenizer *Tokenizer, ttr_record *OutRecord,
 
 ttr_interval ParseInterval(tokenizer *Tokenizer, int Year, int Month, int Day)
 {
-    ttr_interval Result = { 0 };
+    ttr_interval Result = {};
     RequireTokenAndEat(Tokenizer, Token_OpenParen);
 
     if (!Tokenizer->HasError)
@@ -156,7 +154,7 @@ ttr_interval ParseInterval(tokenizer *Tokenizer, int Year, int Month, int Day)
 
 ttr_day ParseDay(tokenizer *Tokenizer)
 {
-    ttr_day Result = { 0 };
+    ttr_day Result = {};
 
     token_type TokenPattern[] = { Token_Number, Token_Slash,
                                   Token_Number, Token_Slash,
@@ -178,10 +176,9 @@ ttr_day ParseDay(tokenizer *Tokenizer)
     return Result;
 }
 
-// TODO(speciial): Don't use time_t, use own type
-time_t ParseTime(tokenizer *Tokenizer, int Year, int Month, int Day)
+s64 ParseTime(tokenizer *Tokenizer, int Year, int Month, int Day)
 {
-    time_t Result = 0;
+    s64 Result = 0;
 
     token_type TokenPattern[] = { Token_Number, Token_Colon, Token_Number };
     if (RequireTokenPattern(Tokenizer, TokenPattern, ArrayCount(TokenPattern)))
@@ -202,7 +199,7 @@ time_t ParseTime(tokenizer *Tokenizer, int Year, int Month, int Day)
 
 void RecordListPush(arena *Arena, ttr_record_list *RecordList)
 {
-    ttr_record_list_node *NewNode = PushStruct(Arena, ttr_record_list_node, 1);
+    ttr_record_list_node *NewNode = PushStruct(Arena, ttr_record_list_node);
     if (!RecordList->First && !RecordList->Last)
     {
         RecordList->First = NewNode;
@@ -218,7 +215,7 @@ void RecordListPush(arena *Arena, ttr_record_list *RecordList)
 
 void WriteRecordFile(arena *Arena, const char *Filename, ttr_record_list Records)
 {
-    string_list RecordStringList = { 0 };
+    string_list RecordStringList = {};
 
     ttr_record_list_node *CurrentMonth = Records.First;
     while (CurrentMonth)
@@ -241,8 +238,8 @@ void WriteRecordFile(arena *Arena, const char *Filename, ttr_record_list Records
 
 string WriteFormattedRecord(arena *Arena, ttr_record *Record, int Year, int Month, int Day)
 {
-    string Result = { 0 };
-    arena Scratch = NewScratchArena();
+    string Result = {};
+    arena Scratch = NewArena(MB(1));
 
     // Work hours
     string WorkTimeString = WriteFormattedInterval(&Scratch, Record->Work);
@@ -266,15 +263,14 @@ string WriteFormattedRecord(arena *Arena, ttr_record *Record, int Year, int Mont
     char *FinalFormat = "%02d/%02d/%02d{%s[%s]};\n";
     Result = StringFormat(Arena, FinalFormat, Year, Month, Day, WorkTimeString.Content, PauseTimersString.Content);
 
-    // NOTE(speciial): Currently, scratch arenas leak. I'll change my approach to arenas later. 
-    // ArenaFree(&Scratch);
+    FreeArena(&Scratch);
 
     return Result;
 }
 
 string WriteFormattedInterval(arena *Arena, ttr_interval Interval)
 {
-    string Result = { 0 };
+    string Result = {};
 
     char *CompleteIntervalFormat = "(%02d:%02d,%02d:%02d)";
     char *IncompleteIntervalFormat = "(%02d:%02d,_)";
