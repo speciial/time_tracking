@@ -1,12 +1,10 @@
 #ifndef time_tracking_H
 #define time_tracking_H
 
-#include <stdbool.h>
+#include "tokenizer.hpp"
 
-#include <arena.h>
-#include <strings.h>
-
-#include "tokenizer.h"
+#include <base_arena.hpp>
+#include <base_strings.hpp>
 
 enum { MAX_PAUSE_COUNT = 4 };
 enum { DAYS_PER_MONTH = 32 };
@@ -96,7 +94,7 @@ ttr_interval ParseInterval(tokenizer *Tokenizer, int Year, int Month, int Day);
 
 ttr_day ParseDay(tokenizer *Tokenizer);
 
-time_t ParseTime(tokenizer *Tokenizer, int Year, int Month, int Day);
+s64 ParseTime(tokenizer *Tokenizer, int Year, int Month, int Day);
 
 void RecordListPush(arena *Arena, ttr_record_list *RecordList);
 

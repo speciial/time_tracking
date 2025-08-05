@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include <time_tracking.h>
+#include <time_tracking.hpp>
 
 int main(int argc, char **argv)
 {

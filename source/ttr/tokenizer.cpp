@@ -1,7 +1,7 @@
-#include "tokenizer.h"
+#include "tokenizer.hpp"
 
-#include <common.h>
-#include <strings.h>
+#include <common.hpp>
+#include <base_strings.hpp>
 
 bool IsWhitespace(char C)
 {
@@ -34,7 +34,7 @@ void EatAllWhitespace(tokenizer *Tokenizer)
 
 token PeekNextToken(tokenizer *Tokenizer)
 {
-    token Result = { 0 };
+    token Result = {};
     EatAllWhitespace(Tokenizer);
 
     Result.TextLength = 1;
@@ -54,17 +54,17 @@ token PeekNextToken(tokenizer *Tokenizer)
         case ':': { Result.Type = Token_Colon; } break;
         case ',': { Result.Type = Token_Comma; } break;
         case ';': { Result.Type = Token_Semicolon; } break;
-        
-        case '0': 
-        case '1': 
-        case '2': 
-        case '3': 
-        case '4': 
-        case '5': 
-        case '6': 
-        case '7': 
-        case '8': 
-        case '9': 
+
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
         {
             char *CurrentToken = Tokenizer->At;
             int TextLength = 0;
@@ -75,13 +75,14 @@ token PeekNextToken(tokenizer *Tokenizer)
                 ++CurrentToken;
             }
             Result.Type = Token_Number;
-            Result.Data.IntValue = StringToInt(Tokenizer->At, TextLength);
+            Result.Data.IntValue = StringToUInt(Tokenizer->At, TextLength);
             Result.TextLength = TextLength;
         } break;
 
         default:
         {
-            PrintFormatString("Unknown Token: %c\n", Tokenizer->At[0]);
+            // TODO(speciial): this should not do any printing!
+            // PrintFormatString("Unknown Token: %c\n", Tokenizer->At[0]);
             // PlaceError(Tokenizer, '?', Tokenizer->At[0]);
         } break;
     }
@@ -98,7 +99,7 @@ token EatNextToken(tokenizer *Tokenizer)
 
 token PeekToken(tokenizer *Tokenizer, int Offset)
 {
-    token Result = { 0 };
+    token Result = { };
 
     char *At = Tokenizer->At;
     int Line = Tokenizer->Line;
@@ -140,7 +141,7 @@ bool RequireTokenPattern(tokenizer *Tokenizer, token_type *TokenPattern, int Tok
             {
                 EatNextToken(Tokenizer);
             }
-            PlaceError(Tokenizer, TokenPattern[TokenIndex], CurrentToken.Type);
+            // PlaceError(Tokenizer, TokenPattern[TokenIndex], CurrentToken.Type);
 
             Result = false;
             break;
@@ -156,7 +157,7 @@ bool RequireToken(tokenizer *Tokenizer, token_type DesiredType)
     bool Result = CurrentToken.Type == DesiredType;
     if (!Result)
     {
-        PlaceError(Tokenizer, DesiredType, CurrentToken.Type);
+        // PlaceError(Tokenizer, DesiredType, CurrentToken.Type);
     }
     return Result;
 }
@@ -167,11 +168,12 @@ bool RequireTokenAndEat(tokenizer *Tokenizer, token_type DesiredType)
     bool Result = CurrentToken.Type == DesiredType;
     if (!Result)
     {
-        PlaceError(Tokenizer, DesiredType, CurrentToken.Type);
+        // PlaceError(Tokenizer, DesiredType, CurrentToken.Type);
     }
     return Result;
 }
 
+#if 0
 void PlaceError(tokenizer *Tokenizer, token_type ExpectedToken, token_type ReceivedToken)
 {
     if (!Tokenizer->HasError)
@@ -196,11 +198,11 @@ void PlaceError(tokenizer *Tokenizer, token_type ExpectedToken, token_type Recei
         char FileContentBuffer[16] = { 0 };
         StringCopy(FileContentBuffer, 16, Tokenizer->At -
                    CharLeftOffset, CharLeftOffset + CharRightOffset);
-        
+
         PrintFormatString("Error in line %d, char %d\n", Tokenizer->Line, Tokenizer->Char);
         PrintFormatString("\t%s\n", FileContentBuffer);
         PrintFormatString("\t%*s\n", CharLeftOffset, "^");
-        
+
         // TODO(speciial): Print Token_Number properly!
         PrintFormatString("\t%*s %c %s %c\n", CharLeftOffset, "Expected", ExpectedToken, "but got", ReceivedToken);
 
@@ -218,3 +220,4 @@ void PlaceError(tokenizer *Tokenizer, token_type ExpectedToken, token_type Recei
         Tokenizer->HasError = true;
     }
 }
+#endif 
