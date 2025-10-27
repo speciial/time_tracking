@@ -41,36 +41,36 @@
         {
             "type": "pickString",
             "id": "command",
-            "default": "--show",
+            "default": "show",
             "description": "Command to be executed",
             "options": [
                 {
                     "label": "show",
-                    "value": "--show"
+                    "value": "show"
                 },
                 {
                     "label": "start",
-                    "value": "--start"
+                    "value": "start"
                 },
                 {
                     "label": "end",
-                    "value": "--end"
+                    "value": "end"
                 },
                 {
                     "label": "pause",
-                    "value": "--pause"
+                    "value": "pause"
                 },
                 {
                     "label": "unpause",
-                    "value": "--unpause"
+                    "value": "unpause"
                 },
                 {
                     "label": "show-month",
-                    "value": "--show-month"
+                    "value": "show-month"
                 },
                 {
                     "label": "config",
-                    "value": "--config"
+                    "value": "config"
                 },
             ]
         }

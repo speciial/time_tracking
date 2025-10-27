@@ -3,7 +3,12 @@ enable_testing()
 set( TEST_TARGET_NAME ttr_test )
 add_executable( ${TEST_TARGET_NAME} )
 
-target_sources( ${TEST_TARGET_NAME} PUBLIC test_main.cpp )
+target_sources( ${TEST_TARGET_NAME} PUBLIC 
+    test_main.cpp 
+    
+    test_ttr.cpp
+    # test_ttr_reader.cpp
+)
 
 target_link_libraries( ${TEST_TARGET_NAME} PUBLIC ttr_lib )
 

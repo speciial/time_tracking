@@ -11,3 +11,4 @@ cpp_new_line_close_brace_same_line_empty_function = false
 cpp_new_line_scope_braces_on_separate_lines = new_line
 cpp_new_line_before_open_brace_block = true
 cpp_space_pointer_reference_alignment = right
+cpp_indent_namespace_contents = false
