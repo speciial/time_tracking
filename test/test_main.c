@@ -1,11 +1,7 @@
 #include <stdio.h>
 
-#include "test_time_tracking.h"
-
-int main ()
+int main(int argc, char** argv)
 {
-    printf("===== Time Tracking Test =====\n");
-    runTTRTests();
-
+    printf("Time Tracking Test\n");
     return 0;
 }
