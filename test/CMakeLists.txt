@@ -9,6 +9,8 @@ target_sources( ${TEST_TARGET_NAME} PUBLIC
     test_main.c
 )
 
+target_link_libraries( ${TEST_TARGET_NAME} PUBLIC base_lib ttr_lib )
+
 add_test( NAME ${TEST_TARGET_NAME}
           COMMAND ${TEST_TARGET_NAME} 
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test_data )
