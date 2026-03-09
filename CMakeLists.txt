@@ -12,3 +12,6 @@ project( ttr VERSION 2.0 )
 
 add_subdirectory( source )
 add_subdirectory( test )
+
+# This line is added to make sure vscode can find the test config
+enable_testing()

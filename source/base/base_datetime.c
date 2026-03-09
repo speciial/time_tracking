@@ -7,6 +7,11 @@ Timestamp get_current_timestamp()
     return (Timestamp)time(0);
 }
 
+DateTime get_current_datetime()
+{
+    return datetime_from_timestamp(get_current_timestamp());
+}
+
 Timestamp timestamp_from_datetime(DateTime dateTime)
 {
     struct tm timeInfo = { 0 };
@@ -38,4 +43,9 @@ DateTime datetime_from_timestamp(Timestamp timestamp)
     }
 
     return result;
+}
+
+S64 timestamp_diff_seconds(Timestamp end, Timestamp begin)
+{
+    return ((S64)end - (S64)begin);
 }

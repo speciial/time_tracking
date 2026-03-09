@@ -25,4 +25,7 @@ typedef U64 Timestamp;
 #define MB(value) (KB(value) * 1024)
 #define GB(value) (MB(value) * 1024)
 
+#define min_value(a, b) (((a)<(b)) ? (a) : (b))
+#define max_value(a, b) (((a)>(b)) ? (a) : (b))
+
 #endif // base_core_h

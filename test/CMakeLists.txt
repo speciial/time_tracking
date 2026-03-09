@@ -1,16 +1,18 @@
 include( CTest )
 enable_testing()
 
-set( TEST_TARGET_NAME ${PROJECT_NAME}_test )
-
-add_executable( ${TEST_TARGET_NAME} )
-
-target_sources( ${TEST_TARGET_NAME} PUBLIC 
-    test_main.c
+set( TEST_FILE_LIST
+    test_timer.c
+    test_ttr.c
 )
+create_test_sourcelist( TEST_SOURCE_LIST ttr_test_driver.c ${TEST_FILE_LIST} )
 
-target_link_libraries( ${TEST_TARGET_NAME} PUBLIC base_lib ttr_lib )
+add_executable( ${PROJECT_NAME}_test ${TEST_SOURCE_LIST} )
+target_link_libraries( ${PROJECT_NAME}_test PUBLIC base_lib ttr_lib )
 
-add_test( NAME ${TEST_TARGET_NAME}
-          COMMAND ${TEST_TARGET_NAME} 
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test_data )
+foreach(test ${TEST_FILE_LIST})
+    get_filename_component( TEST_NAME ${test} NAME_WE )
+    add_test( NAME ${TEST_NAME}
+              COMMAND ${PROJECT_NAME}_test ${TEST_NAME} 
+              WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test_data )
+endforeach()

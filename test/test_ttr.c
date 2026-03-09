@@ -147,7 +147,7 @@ void test_unpause(Arena *arena)
     assert(TTR_ERROR == result);
 }
 
-int main(int argc, char **argv)
+int test_ttr(int argc, char **argv)
 {
     printf("Time Tracking Test\n");
 
