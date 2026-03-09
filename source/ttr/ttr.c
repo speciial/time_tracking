@@ -12,21 +12,61 @@ TTR *ttr_init(Arena *arena, String recordFile)
     TTR *result = push_struct(arena, TTR);
     result->capacity = 10;
     result->count = 0;
-    result->activeIndex = -1;
     result->records = push_array(arena, TTRRecord, result->capacity);
     return result;
 }
 
-TTRRecord *ttr_get_current(TTR *ttr)
+TTRRecord *ttr_get_active(TTR *ttr)
 {
+    assert(ttr->count < ttr->capacity);
+
     TTRRecord *result = 0;
-    if (ttr->activeIndex != -1)
+    // NOTE(speciial): there should never be a case where an active record
+    //                 isn't the last in the list!
+    if (ttr->records[ttr->count].timer.state != TIMER_UNINITIALIZED
+        && ttr->records[ttr->count].timer.state != TIMER_ENDED)
     {
-        result = &ttr->records[ttr->activeIndex];
+        result = &ttr->records[ttr->count];
     }
-    else if (ttr->count > 0)
+    return result;
+}
+
+TTRRecord *ttr_get_day(TTR *ttr, DateTime dateTime)
+{
+    assert(ttr->count < ttr->capacity);
+
+    TTRRecord *result = 0;
+    for (U64 recordIndex = 0; recordIndex <= ttr->count; ++recordIndex)
     {
-        result = &ttr->records[ttr->count - 1];
+        if (is_same_date(dateTime, ttr->records[recordIndex].day))
+        {
+            result = &ttr->records[recordIndex];
+            break;
+        }
+    }
+    return result;
+}
+
+B32 ttr_has_active(TTR *ttr)
+{
+    assert(ttr->count < ttr->capacity);
+    B32 result = (ttr->records[ttr->count].timer.state != TIMER_UNINITIALIZED
+                  && ttr->records[ttr->count].timer.state != TIMER_ENDED);
+    return result;
+}
+
+B32 ttr_has_day(TTR *ttr, DateTime dateTime)
+{
+    assert(ttr->count < ttr->capacity);
+
+    B32 result = 0;
+    for (U64 recordIndex = 0; recordIndex <= ttr->count; ++recordIndex)
+    {
+        if (is_same_date(dateTime, ttr->records[recordIndex].day))
+        {
+            result = 1;
+            break;
+        }
     }
     return result;
 }
@@ -36,20 +76,20 @@ TTRReturnCode ttr_start(TTR *ttr, Timestamp timestamp)
     assert(ttr->count < ttr->capacity);
 
     TTRReturnCode result = TTR_ERROR;
-    // TODO(speciial): do we need to check if the timestamp makes sense?
-    if (timestamp == 0)
-    {
-        timestamp = get_current_timestamp();
-    }
 
-    if (ttr->activeIndex == -1)
+    // TODO(speciial): technically, it is possible to insert invalid days (e.g. weekends)
+    //                 but this should be good enough for what i need right now.
+    Timestamp start = (timestamp == 0) ? get_current_timestamp() : timestamp;
+    DateTime startDt = datetime_from_timestamp(start);
+
+    if (!ttr_has_active(ttr) && !ttr_has_day(ttr, startDt))
     {
         TTRRecord *record = &ttr->records[ttr->count];
-        record->state = TTR_RECORD_STARTED;
-        record->interval[0].start = timestamp;
-        ttr->activeIndex = ttr->count;
-        ttr->count++;
-        result = TTR_SUCCESS;
+        if (timer_start(&record->timer, start) == TIMER_SUCCESS)
+        {
+            record->day = startDt;
+            result = TTR_SUCCESS;
+        }
     }
     return result;
 }
@@ -59,20 +99,14 @@ TTRReturnCode ttr_end(TTR *ttr, Timestamp timestamp)
     assert(ttr->count < ttr->capacity);
 
     TTRReturnCode result = TTR_ERROR;
-    if (timestamp == 0)
-    {
-        timestamp = get_current_timestamp();
-    }
+    Timestamp end = (timestamp == 0) ? get_current_timestamp() : timestamp;
 
-    if (ttr->activeIndex != -1)
+    if (ttr_has_active(ttr))
     {
-        TTRRecord *record = ttr_get_current(ttr);
-        // TODO(speciial): allow paused recrods to be ended immediately
-        if (record && record->state == TTR_RECORD_STARTED)
+        TTRRecord *record = ttr_get_active(ttr);
+        if (timer_end(&record->timer, end) == TIMER_SUCCESS)
         {
-            record->state = TTR_RECORD_ENDED;
-            record->interval[record->intervalCount++].end = timestamp;
-            ttr->activeIndex = -1;
+            ttr->count++;
             result = TTR_SUCCESS;
         }
     }
@@ -84,20 +118,16 @@ TTRReturnCode ttr_pause(TTR *ttr, Timestamp timestamp)
     assert(ttr->count < ttr->capacity);
 
     TTRReturnCode result = TTR_ERROR;
-    if (timestamp == 0)
-    {
-        timestamp = get_current_timestamp();
-    }
+    Timestamp pause = (timestamp == 0) ? get_current_timestamp() : timestamp;
 
-    if (ttr->activeIndex != -1)
+    if (ttr_has_active(ttr))
     {
-        TTRRecord *record = ttr_get_current(ttr);
-        if (record && record->state == TTR_RECORD_STARTED && record->intervalCount < TTR_MAX_INTERVAL)
+        TTRRecord *record = ttr_get_active(ttr);
+        if (timer_pause(&record->timer, pause) == TIMER_SUCCESS)
         {
-            record->state = TTR_RECORD_PAUSED;
-            record->interval[record->intervalCount++].end = timestamp;
             result = TTR_SUCCESS;
         }
+
     }
     return result;
 }
@@ -107,20 +137,16 @@ TTRReturnCode ttr_unpause(TTR *ttr, Timestamp timestamp)
     assert(ttr->count < ttr->capacity);
 
     TTRReturnCode result = TTR_ERROR;
-    if (timestamp == 0)
-    {
-        timestamp = get_current_timestamp();
-    }
+    Timestamp unpause = (timestamp == 0) ? get_current_timestamp() : timestamp;
 
-    if (ttr->activeIndex != -1)
+    if (ttr_has_active(ttr))
     {
-        TTRRecord *record = ttr_get_current(ttr);
-        if (record && record->state == TTR_RECORD_PAUSED)
+        TTRRecord *record = ttr_get_active(ttr);
+        if (timer_unpause(&record->timer, unpause) == TIMER_SUCCESS)
         {
-            record->state = TTR_RECORD_STARTED;
-            record->interval[record->intervalCount].start = timestamp;
             result = TTR_SUCCESS;
         }
+
     }
     return result;
 }

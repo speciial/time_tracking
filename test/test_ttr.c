@@ -11,88 +11,81 @@ void test_init(Arena *arena)
     assert(0 != ttr);
 
     // TODO(speciial): test init once file parsing is implemented
-
-    fprintf(stdout, "[PASSED] test_init\n");
 }
 
 void test_start(Arena *arena)
 {
-    // test empty, no timestamp
+    // test empty
     TTR *ttr = ttr_init(arena, str_lit("ttr_empty.records"));
-    TTRReturnCode result = ttr_start(ttr, 0);
+    Timestamp start = 1773058784;
+    DateTime startDt = datetime_from_timestamp(start);
+
+    TTRReturnCode result = ttr_start(ttr, start);
     assert(TTR_SUCCESS == result);
 
-    TTRRecord *current = ttr_get_current(ttr);
+    TTRRecord *current = ttr_get_day(ttr, startDt);
     assert(0 != current);
-    assert(TTR_RECORD_STARTED == current->state);
-    assert(0 != current->interval[0].start);
+    assert(TIMER_STARTED == current->timer.state);
+    assert(is_same_date(startDt, current->day));
 
-    // test empty, with timestamp
-    ttr = ttr_init(arena, str_lit("ttr_empty.records"));
-    result = ttr_start(ttr, 1234);
-    assert(TTR_SUCCESS == result);
-
-    current = ttr_get_current(ttr);
-    assert(0 != current);
-    assert(TTR_RECORD_STARTED == current->state);
-    assert(1234 == current->interval[0].start);
-
-    // test dirty, no timestamp
+    // test dirty
     ttr = ttr_init(arena, str_lit("ttr_empty.records"));
     result = ttr_start(ttr, 0);
     assert(TTR_SUCCESS == result);
 
     result = ttr_start(ttr, 0);
     assert(TTR_ERROR == result);
-
-    fprintf(stdout, "[PASSED] test_start\n");
 }
 
 void test_end(Arena *arena)
 {
     // test empty, started
     TTR *ttr = ttr_init(arena, str_lit("ttr_empty.records"));
-    ttr_start(ttr, 0);
-    TTRReturnCode result = ttr_end(ttr, 0);
+
+    Timestamp start = 1773058784;
+    Timestamp end = (Timestamp)(1773058784 + HOURS(2));
+    DateTime startDt = datetime_from_timestamp(start);
+
+    ttr_start(ttr, start);
+    TTRReturnCode result = ttr_end(ttr, end);
     assert(TTR_SUCCESS == result);
 
-    TTRRecord *current = ttr_get_current(ttr);
+    TTRRecord *current = ttr_get_day(ttr, startDt);
     assert(0 != current);
-    assert(TTR_RECORD_ENDED == current->state);
-    assert(0 != current->interval[0].start);
-    assert(0 != current->interval[0].end);
+    assert(TIMER_ENDED == current->timer.state);
 
     // test empty, not started
     ttr = ttr_init(arena, str_lit("ttr_empty.records"));
-    result = ttr_end(ttr, 0);
+    result = ttr_end(ttr, end);
     assert(TTR_ERROR == result);
 
-    current = ttr_get_current(ttr);
+    current = ttr_get_day(ttr, startDt);
     assert(0 == current);
 
-    // test dirty, not started
+    // test dirty, already ended 
     ttr = ttr_init(arena, str_lit("ttr_empty.records"));
     ttr_start(ttr, 0);
     ttr_end(ttr, 0);
     result = ttr_end(ttr, 0);
     assert(TTR_ERROR == result);
-
-    fprintf(stdout, "[PASSED] test_end\n");
 }
 
 void test_pause(Arena *arena)
 {
     // test empty, started
     TTR *ttr = ttr_init(arena, str_lit("ttr_empty.records"));
-    ttr_start(ttr, 0);
-    TTRReturnCode result = ttr_pause(ttr, 0);
+    Timestamp start = 1773058784;
+    Timestamp pause = (Timestamp)(1773058784 + HOURS(1));
+    Timestamp end = (Timestamp)(1773058784 + HOURS(2));
+    DateTime startDt = datetime_from_timestamp(start);
+
+    ttr_start(ttr, start);
+    TTRReturnCode result = ttr_pause(ttr, pause);
     assert(TTR_SUCCESS == result);
 
-    TTRRecord *current = ttr_get_current(ttr);
+    TTRRecord *current = ttr_get_day(ttr, startDt);
     assert(0 != current);
-    assert(TTR_RECORD_PAUSED == current->state);
-    assert(0 != current->interval[0].start);
-    assert(0 != current->interval[0].end);
+    assert(TIMER_PAUSED == current->timer.state);
 
     // test empty, not started
     ttr = ttr_init(arena, str_lit("ttr_empty.records"));
@@ -113,16 +106,21 @@ void test_unpause(Arena *arena)
 {
     // test empty, started
     TTR *ttr = ttr_init(arena, str_lit("ttr_empty.records"));
-    ttr_start(ttr, 0);
-    ttr_pause(ttr, 0);
-    TTRReturnCode result = ttr_unpause(ttr, 0);
+
+    Timestamp start = 1773058784;
+    Timestamp pause = (Timestamp)(1773058784 + HOURS(1));
+    Timestamp unpause = (Timestamp)(1773058784 + HOURS(1) + MINUTES(30));
+    Timestamp end = (Timestamp)(1773058784 + HOURS(2));
+    DateTime startDt = datetime_from_timestamp(start);
+
+    ttr_start(ttr, start);
+    ttr_pause(ttr, pause);
+    TTRReturnCode result = ttr_unpause(ttr, unpause);
     assert(TTR_SUCCESS == result);
 
-    TTRRecord *current = ttr_get_current(ttr);
+    TTRRecord *current = ttr_get_day(ttr, startDt);
     assert(0 != current);
-    assert(TTR_RECORD_STARTED == current->state);
-    assert(0 != current->interval[1].start);
-    assert(0 == current->interval[1].end);
+    assert(TIMER_STARTED == current->timer.state);
 
     // test empty, not started
     ttr = ttr_init(arena, str_lit("ttr_empty.records"));
@@ -134,26 +132,14 @@ void test_unpause(Arena *arena)
     ttr_start(ttr, 0);
     result = ttr_unpause(ttr, 0);
     assert(TTR_ERROR == result);
-
-    // test empty, pause overflow
-    ttr = ttr_init(arena, str_lit("ttr_empty.records"));
-    ttr_start(ttr, 0);
-    for (U32 i = 0; i < TTR_MAX_INTERVAL; ++i)
-    {
-        ttr_pause(ttr, 0);
-        ttr_unpause(ttr, 0);
-    }
-    result = ttr_pause(ttr, 0);
-    assert(TTR_ERROR == result);
 }
 
 int test_ttr(int argc, char **argv)
 {
-    printf("Time Tracking Test\n");
+    printf("Test TTR\n");
 
-    fprintf(stdout, "sizeof(TTR) == %zd\n", sizeof(TTR));
-    fprintf(stdout, "sizeof(TTRRecord) == %zd\n", sizeof(TTRRecord));
-    fprintf(stdout, "sizeof(TTRInterval) == %zd\n", sizeof(TTRInterval));
+    // fprintf(stdout, "sizeof(TTR) == %zd\n", sizeof(TTR));
+    // fprintf(stdout, "sizeof(TTRRecord) == %zd\n", sizeof(TTRRecord));
 
     Arena arena = arena_create(MB(20));
 

@@ -136,7 +136,7 @@ void test_timer_total_active_time_seconds()
 
 int test_timer(int argc, char **argv)
 {
-    printf("Timer Test\n");
+    printf("Test Timer\n");
 
     test_timer_start();
     test_timer_end();

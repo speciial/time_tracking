@@ -29,4 +29,7 @@ DateTime datetime_from_timestamp(Timestamp timestamp);
 
 S64 timestamp_diff_seconds(Timestamp end, Timestamp begin);
 
+B32 is_same_date(DateTime dt1, DateTime dt2);
+B32 is_same_datetime(DateTime dt1, DateTime dt2);
+
 #endif // base_datetime_h

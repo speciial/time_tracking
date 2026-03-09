@@ -3,6 +3,13 @@
 
 #include <base_core.h>
 
+// TODO(speciial): ensure the timer only uses "reasonable" timestamps 
+//                 as arguments, e.g. no end before start etc.
+
+// TODO(speciial): check if i really need enume as result type or if a
+//                 B32 would be enough. 
+
+
 typedef enum TimerResult TimerResult;
 enum TimerResult
 {

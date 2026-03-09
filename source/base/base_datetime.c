@@ -49,3 +49,22 @@ S64 timestamp_diff_seconds(Timestamp end, Timestamp begin)
 {
     return ((S64)end - (S64)begin);
 }
+
+B32 is_same_date(DateTime dt1, DateTime dt2)
+{
+    B32 result = ((dt1.year == dt2.year)
+                  && (dt1.month == dt2.month)
+                  && (dt1.day == dt2.day));
+    return result;
+}
+
+B32 is_same_datetime(DateTime dt1, DateTime dt2)
+{
+    B32 result = ((dt1.year == dt2.year)
+                  && (dt1.month == dt2.month)
+                  && (dt1.day == dt2.day)
+                  && (dt1.hour == dt2.hour)
+                  && (dt1.minute == dt2.minute)
+                  && (dt1.second == dt2.second));
+    return result;
+}
