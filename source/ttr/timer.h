@@ -32,7 +32,7 @@ struct Timer
     Timestamp start;
     Timestamp end;
     Timestamp lastPause;
-    S64 totalPauseTimeSeconds;
+    S64 totalPauseTimeSeconds; // TODO(speciial): is 32 bits enough here?
     TimerState state;
 };
 

@@ -20,6 +20,7 @@ struct TTRRecord
 {
     Timer timer;
     DateTime day;
+    String message;
 };
 
 typedef struct TTR TTR;

@@ -4,15 +4,25 @@
 #include <string.h>
 
 #include <base_datetime.h>
+#include <base_file.h>
+
+#include "reader.h"
 
 TTR *ttr_init(Arena *arena, String recordFile)
 {
-    // TODO(speciial): implement record file parsing
+    TTR *result = 0;
 
-    TTR *result = push_struct(arena, TTR);
-    result->capacity = 10;
-    result->count = 0;
-    result->records = push_array(arena, TTRRecord, result->capacity);
+    U64 fileSize = file_size(recordFile);
+    if (fileSize > 0)
+    {
+        String fileContent = string_alloc(arena, fileSize);
+        if (file_read(recordFile, fileContent.content, fileContent.length))
+        {
+            TTRHeader header = ttr_read_header(fileContent);
+            result = ttr_read_entries(arena, header, fileContent);
+        }
+    }
+
     return result;
 }
 

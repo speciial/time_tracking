@@ -1,6 +1,7 @@
 add_library( base_lib
     base_arena.c
     base_string.c
+    base_file.c
     base_datetime.c
 )
 

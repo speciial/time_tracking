@@ -51,6 +51,8 @@ void *arena_alloc(Arena *arena, U64 size, U64 count)
 
     U64 alignedSize = align_forward(size * count, DEFAULT_ALIGNMENT);
     U64 remainingCapacity = (arena->baseAddress + arena->totalSize) - arena->currentAddress;
+
+    // TODO(speciial): we should make sure, that this is checked in release as well. 
     assert(remainingCapacity > alignedSize);
 
     result = arena->currentAddress;
