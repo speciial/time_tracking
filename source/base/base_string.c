@@ -102,3 +102,35 @@ U64 string_to_u64(String string)
     }
     return result;
 }
+
+void string_list_append(Arena *arena, StringList *list, String string)
+{
+    StringListNode *node = push_struct(arena, StringListNode);
+    node->string = string;
+    if (!list->first && !list->last)
+    {
+        list->first = node;
+        list->last = node;
+    }
+    else
+    {
+        list->last->next = node;
+        list->last = node;
+    }
+    list->nodeCount++;
+    list->totalStringLength += node->string.length;
+}
+
+String string_list_flatten(Arena *arena, StringList *list)
+{
+    String result = string_alloc(arena, list->totalStringLength);
+    StringListNode *currentNode = list->first;
+    U64 currentStringPos = 0;
+    while (currentNode)
+    {
+        memcpy(result.content + currentStringPos, currentNode->string.content, currentNode->string.length);
+        currentStringPos += currentNode->string.length;
+        currentNode = currentNode->next;
+    }
+    return result;
+}

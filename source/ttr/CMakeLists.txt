@@ -2,6 +2,7 @@ add_library( ttr_lib
     ttr.c
     timer.c
     reader.c
+    writer.c
 )
 
 target_link_libraries( ttr_lib PRIVATE base_lib )

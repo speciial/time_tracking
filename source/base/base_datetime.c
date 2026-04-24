@@ -68,3 +68,10 @@ B32 is_same_datetime(DateTime dt1, DateTime dt2)
                   && (dt1.second == dt2.second));
     return result;
 }
+
+B32 is_weekday(Timestamp timestamp)
+{
+    time_t timeValue = (time_t)timestamp;
+    struct tm *timeInfo = gmtime(&timestamp);
+    return (timeInfo->tm_wday != 0) && (timeInfo->tm_wday != 6);
+}

@@ -7,7 +7,7 @@
 
 void test_init(Arena *arena)
 {
-    TTR *ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    TTR *ttr = ttr_init_empty(arena, 16);
     assert(0 != ttr);
 
     // TODO(speciial): test init once file parsing is implemented
@@ -16,7 +16,7 @@ void test_init(Arena *arena)
 void test_start(Arena *arena)
 {
     // test empty
-    TTR *ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    TTR *ttr = ttr_init_empty(arena, 16);
     Timestamp start = 1773058784;
     DateTime startDt = datetime_from_timestamp(start);
 
@@ -25,11 +25,11 @@ void test_start(Arena *arena)
 
     TTRRecord *current = ttr_get_day(ttr, startDt);
     assert(0 != current);
-    assert(TIMER_STARTED == current->timer.state);
+    assert(TIMER_STATE_STARTED == current->timer.state);
     assert(is_same_date(startDt, current->day));
 
     // test dirty
-    ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    ttr = ttr_init_empty(arena, 16);
     result = ttr_start(ttr, 0);
     assert(TTR_SUCCESS == result);
 
@@ -40,7 +40,7 @@ void test_start(Arena *arena)
 void test_end(Arena *arena)
 {
     // test empty, started
-    TTR *ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    TTR *ttr = ttr_init_empty(arena, 16);
 
     Timestamp start = 1773058784;
     Timestamp end = (Timestamp)(1773058784 + HOURS(2));
@@ -52,10 +52,10 @@ void test_end(Arena *arena)
 
     TTRRecord *current = ttr_get_day(ttr, startDt);
     assert(0 != current);
-    assert(TIMER_ENDED == current->timer.state);
+    assert(TIMER_STATE_ENDED == current->timer.state);
 
     // test empty, not started
-    ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    ttr = ttr_init_empty(arena, 16);
     result = ttr_end(ttr, end);
     assert(TTR_ERROR == result);
 
@@ -63,7 +63,7 @@ void test_end(Arena *arena)
     assert(0 == current);
 
     // test dirty, already ended 
-    ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    ttr = ttr_init_empty(arena, 16);
     ttr_start(ttr, 0);
     ttr_end(ttr, 0);
     result = ttr_end(ttr, 0);
@@ -73,7 +73,7 @@ void test_end(Arena *arena)
 void test_pause(Arena *arena)
 {
     // test empty, started
-    TTR *ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    TTR *ttr = ttr_init_empty(arena, 16);
     Timestamp start = 1773058784;
     Timestamp pause = (Timestamp)(1773058784 + HOURS(1));
     Timestamp end = (Timestamp)(1773058784 + HOURS(2));
@@ -85,17 +85,17 @@ void test_pause(Arena *arena)
 
     TTRRecord *current = ttr_get_day(ttr, startDt);
     assert(0 != current);
-    assert(TIMER_PAUSED == current->timer.state);
+    assert(TIMER_STATE_PAUSED == current->timer.state);
 
     // test empty, not started
-    ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    ttr = ttr_init_empty(arena, 16);
     ttr_start(ttr, 0);
     ttr_end(ttr, 0);
     result = ttr_pause(ttr, 0);
     assert(TTR_ERROR == result);
 
     // test empty, paused
-    ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    ttr = ttr_init_empty(arena, 16);
     ttr_start(ttr, 0);
     ttr_pause(ttr, 0);
     result = ttr_pause(ttr, 0);
@@ -105,7 +105,7 @@ void test_pause(Arena *arena)
 void test_unpause(Arena *arena)
 {
     // test empty, started
-    TTR *ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    TTR *ttr = ttr_init_empty(arena, 16);
 
     Timestamp start = 1773058784;
     Timestamp pause = (Timestamp)(1773058784 + HOURS(1));
@@ -120,15 +120,15 @@ void test_unpause(Arena *arena)
 
     TTRRecord *current = ttr_get_day(ttr, startDt);
     assert(0 != current);
-    assert(TIMER_STARTED == current->timer.state);
+    assert(TIMER_STATE_STARTED == current->timer.state);
 
     // test empty, not started
-    ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    ttr = ttr_init_empty(arena, 16);
     result = ttr_unpause(ttr, 0);
     assert(TTR_ERROR == result);
 
     // test empty, not paused
-    ttr = ttr_init(arena, str_lit("ttr_empty.records"));
+    ttr = ttr_init_empty(arena, 16);
     ttr_start(ttr, 0);
     result = ttr_unpause(ttr, 0);
     assert(TTR_ERROR == result);

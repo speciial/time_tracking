@@ -3,6 +3,7 @@ enable_testing()
 
 set( TEST_FILE_LIST
     test_reader.c
+    test_writer.c
     test_timer.c
     test_ttr.c
 )

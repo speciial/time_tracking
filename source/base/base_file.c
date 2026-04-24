@@ -24,7 +24,7 @@ B32 file_read(String filePath, U8 *buffer, U64 size)
 B32 file_write(String filePath, U8 *buffer, U64 size)
 {
     B32 result = 0;
-    FILE *fileHandle = fopen(filePath.content, "rb");
+    FILE *fileHandle = fopen(filePath.content, "wb");
     if (fileHandle)
     {
         U64 bytesWritten = fwrite(buffer, sizeof(U8), size, fileHandle);

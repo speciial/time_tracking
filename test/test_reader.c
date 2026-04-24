@@ -58,7 +58,7 @@ void test_read_entries_empty(Arena *arena)
 
 void test_read_entries_single_row(Arena *arena)
 {
-    String fileContent = str_lit("<version=2;entries=1;>\n0:1773058784,1773058784,0,0,TIMER_ENDED,\"Some Message\";");
+    String fileContent = str_lit("<version=2;entries=1;>\n0:1773058784,1773058784,0,0,TIMER_STATE_ENDED,\"Some Message\";");
     TTRHeader header = ttr_read_header(fileContent);
 
     TTR *ttr = ttr_read_entries(arena, header, fileContent);
@@ -71,13 +71,13 @@ void test_read_entries_single_row(Arena *arena)
     assert(1773058784 == ttr->records[0].timer.end);
     assert(0 == ttr->records[0].timer.lastPause);
     assert(0 == ttr->records[0].timer.totalPauseTimeSeconds);
-    assert(TIMER_ENDED == ttr->records[0].timer.state);
+    assert(TIMER_STATE_ENDED == ttr->records[0].timer.state);
     assert(string_equals(str_lit("Some Message"), ttr->records[0].message));
 }
 
 void test_read_entries_multiple_rows(Arena *arena)
 {
-    String fileContent = str_lit("<version=2;entries=2;>\n0:1773058784,1773058784,0,0,TIMER_ENDED,\"Some Message\";\n1:1773385216,0,0,0,TIMER_STARTED,\"Text goes here\";");
+    String fileContent = str_lit("<version=2;entries=2;>\n0:1773058784,1773058784,0,0,TIMER_STATE_ENDED,\"Some Message\";\n1:1773385216,0,0,0,TIMER_STATE_STARTED,\"Text goes here\";");
     TTRHeader header = ttr_read_header(fileContent);
 
     TTR *ttr = ttr_read_entries(arena, header, fileContent);
@@ -90,9 +90,8 @@ void test_read_entries_multiple_rows(Arena *arena)
     assert(0 == ttr->records[1].timer.end);
     assert(0 == ttr->records[1].timer.lastPause);
     assert(0 == ttr->records[1].timer.totalPauseTimeSeconds);
-    assert(TIMER_STARTED == ttr->records[1].timer.state);
+    assert(TIMER_STATE_STARTED == ttr->records[1].timer.state);
     assert(string_equals(str_lit("Text goes here"), ttr->records[1].message));
-
 }
 
 int test_reader(int argc, char **argv)

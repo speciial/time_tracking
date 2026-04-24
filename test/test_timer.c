@@ -10,14 +10,14 @@ void test_timer_start()
     Timer timer = { 0 };
     TimerResult result = timer_start(&timer, start);
 
-    assert(TIMER_SUCCESS == result);
-    assert(TIMER_STARTED == timer.state);
+    assert(TIMER_RESULT_SUCCESS == result);
+    assert(TIMER_STATE_STARTED == timer.state);
     assert(start == timer.start);
 
     result = timer_start(&timer, (Timestamp)(start + MINUTES(3)));
 
-    assert(TIMER_ERROR == result);
-    assert(TIMER_STARTED == timer.state);
+    assert(TIMER_RESULT_ERROR == result);
+    assert(TIMER_STATE_STARTED == timer.state);
     assert(start == timer.start);
 }
 
@@ -29,14 +29,14 @@ void test_timer_end()
     Timer timer = { 0 };
     TimerResult result = timer_end(&timer, end);
 
-    assert(TIMER_ERROR == result);
-    assert(TIMER_UNINITIALIZED == timer.state);
+    assert(TIMER_RESULT_ERROR == result);
+    assert(TIMER_STATE_UNINITIALIZED == timer.state);
 
     timer_start(&timer, start);
     result = timer_end(&timer, end);
 
-    assert(TIMER_SUCCESS == result);
-    assert(TIMER_ENDED == timer.state);
+    assert(TIMER_RESULT_SUCCESS == result);
+    assert(TIMER_STATE_ENDED == timer.state);
     assert(start == timer.start);
     assert(end == timer.end);
 
@@ -45,8 +45,8 @@ void test_timer_end()
     timer_pause(&pausedTimer, pause);
     result = timer_end(&pausedTimer, end);
 
-    assert(TIMER_SUCCESS == result);
-    assert(TIMER_ENDED == timer.state);
+    assert(TIMER_RESULT_SUCCESS == result);
+    assert(TIMER_STATE_ENDED == timer.state);
     assert(start == timer.start);
     assert(end == timer.end);
 }
@@ -60,20 +60,20 @@ void test_timer_pause()
 
     TimerResult result = timer_pause(&timer, pause);
 
-    assert(TIMER_ERROR == result);
-    assert(TIMER_UNINITIALIZED == timer.state);
+    assert(TIMER_RESULT_ERROR == result);
+    assert(TIMER_STATE_UNINITIALIZED == timer.state);
 
     timer_start(&timer, start);
     result = timer_pause(&timer, pause);
 
-    assert(TIMER_SUCCESS == result);
-    assert(TIMER_PAUSED == timer.state);
+    assert(TIMER_RESULT_SUCCESS == result);
+    assert(TIMER_STATE_PAUSED == timer.state);
     assert(start == timer.start);
     assert(pause == timer.lastPause);
 
     result = timer_pause(&timer, pause);
-    assert(TIMER_ERROR == result);
-    assert(TIMER_PAUSED == timer.state);
+    assert(TIMER_RESULT_ERROR == result);
+    assert(TIMER_STATE_PAUSED == timer.state);
 }
 
 void test_timer_unpause()
@@ -86,22 +86,22 @@ void test_timer_unpause()
 
     TimerResult result = timer_unpause(&timer, pause);
 
-    assert(TIMER_ERROR == result);
-    assert(TIMER_UNINITIALIZED == timer.state);
+    assert(TIMER_RESULT_ERROR == result);
+    assert(TIMER_STATE_UNINITIALIZED == timer.state);
 
     timer_start(&timer, start);
     timer_pause(&timer, pause);
     result = timer_unpause(&timer, unpause);
 
-    assert(TIMER_SUCCESS == result);
-    assert(TIMER_STARTED == timer.state);
+    assert(TIMER_RESULT_SUCCESS == result);
+    assert(TIMER_STATE_STARTED == timer.state);
     assert(start == timer.start);
     assert(MINUTES(30) == timer.totalPauseTimeSeconds);
     assert(0 == timer.lastPause);
 
     result = timer_unpause(&timer, unpause);
-    assert(TIMER_ERROR == result);
-    assert(TIMER_STARTED == timer.state);
+    assert(TIMER_RESULT_ERROR == result);
+    assert(TIMER_STATE_STARTED == timer.state);
 }
 
 void test_timer_total_active_time_seconds()

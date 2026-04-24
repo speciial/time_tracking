@@ -41,7 +41,7 @@ TTRHeader ttr_read_header(String fileContent)
         else
         {
             // TODO(speciial): unsupported flag in header
-            fprintf(stdout, "[TTR_READER]: Unsupported header option \"%.*s\"\n", (S32)identifierString.length, identifierString.content);
+            fprintf(stdout, "[TTR_READER]: Unsupported header option \"%.*s\".\n", (S32)identifierString.length, identifierString.content);
 
             remaining = string_advance(remaining, valueEnd);
         }
@@ -58,11 +58,12 @@ TTRHeader ttr_read_header(String fileContent)
 TTR *ttr_read_entries(Arena *arena, TTRHeader header, String fileContent)
 {
     TTR *result = push_struct(arena, TTR);
+    result->header = header;
     result->capacity = header.entryCount + 16;
     result->count = 0;
     result->records = push_array(arena, TTRRecord, result->capacity);
 
-    if (header.entryCount != 0)
+    if (result->header.entryCount != 0)
     {
         String remaining = fileContent;
         S64 firstNewLine = string_index_of_u8(remaining, '\n');
@@ -129,18 +130,18 @@ TTR *ttr_read_entries(Arena *arena, TTRHeader header, String fileContent)
 
 TimerState timer_state_from_string(String stateString)
 {
-    TimerState result = TIMER_UNINITIALIZED;
-    if (string_equals(stateString, str_lit("TIMER_STARTED")))
+    TimerState result = TIMER_STATE_UNINITIALIZED;
+    if (string_equals(stateString, str_lit("TIMER_STATE_STARTED")))
     {
-        result = TIMER_STARTED;
+        result = TIMER_STATE_STARTED;
     }
-    else if (string_equals(stateString, str_lit("TIMER_ENDED")))
+    else if (string_equals(stateString, str_lit("TIMER_STATE_ENDED")))
     {
-        result = TIMER_ENDED;
+        result = TIMER_STATE_ENDED;
     }
-    else if (string_equals(stateString, str_lit("TIMER_PAUSED")))
+    else if (string_equals(stateString, str_lit("TIMER_STATE_PAUSED")))
     {
-        result = TIMER_PAUSED;
+        result = TIMER_STATE_PAUSED;
     }
     return result;
 }

@@ -15,6 +15,13 @@ enum TTRReturnCode
     TTR_ERROR
 };
 
+typedef struct TTRHeader TTRHeader;
+struct TTRHeader
+{
+    U16 version;
+    U64 entryCount;
+};
+
 typedef struct TTRRecord TTRRecord;
 struct TTRRecord
 {
@@ -26,12 +33,18 @@ struct TTRRecord
 typedef struct TTR TTR;
 struct TTR
 {
+    TTRHeader header;
+
     TTRRecord *records;
     U64 capacity;
     U64 count;
 };
 
-TTR *ttr_init(Arena *arena, String recordFile);
+TTR *ttr_init_empty(Arena *arena, U64 capacity);
+TTR *ttr_init_from_file(Arena *arena, String recordFile, U64 additionalCapacity);
+
+// TODO(speciial): return value? error handling?
+void ttr_save_to_file(Arena *arena, TTR *ttr, String recordFile);
 
 TTRRecord *ttr_get_active(TTR *ttr);
 TTRRecord *ttr_get_day(TTR *ttr, DateTime dateTime);

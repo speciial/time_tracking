@@ -13,17 +13,17 @@
 typedef enum TimerResult TimerResult;
 enum TimerResult
 {
-    TIMER_ERROR = 0,
-    TIMER_SUCCESS
+    TIMER_RESULT_ERROR = 0,
+    TIMER_RESULT_SUCCESS
 };
 
 typedef enum TimerState TimerState;
 enum TimerState
 {
-    TIMER_UNINITIALIZED = 0,
-    TIMER_STARTED,
-    TIMER_PAUSED,
-    TIMER_ENDED
+    TIMER_STATE_UNINITIALIZED = 0,
+    TIMER_STATE_STARTED,
+    TIMER_STATE_PAUSED,
+    TIMER_STATE_ENDED
 };
 
 typedef struct Timer Timer;

@@ -6,6 +6,7 @@
 #define SECONDS(value) (value)
 #define MINUTES(value) (SECONDS(value) * 60)
 #define HOURS(value)   (MINUTES(value) * 60)
+#define DAYS(value)    (HOURS(value) * 24)
 
 // TODO(speciial): this should at some point be reworked to use os
 // specifc calls where i can ensure types have certain sizes and
@@ -31,5 +32,7 @@ S64 timestamp_diff_seconds(Timestamp end, Timestamp begin);
 
 B32 is_same_date(DateTime dt1, DateTime dt2);
 B32 is_same_datetime(DateTime dt1, DateTime dt2);
+
+B32 is_weekday(Timestamp timestamp);
 
 #endif // base_datetime_h
