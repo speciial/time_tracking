@@ -179,3 +179,18 @@ TTRReturnCode ttr_unpause(TTR *ttr, Timestamp timestamp)
     }
     return result;
 }
+
+TTRReturnCode ttr_comment(TTR *ttr, Timestamp timestamp, String comment)
+{
+    TTRReturnCode result = TTR_ERROR;
+    Timestamp commentTime = (timestamp == 0) ? get_current_timestamp() : timestamp;
+
+    if (ttr_has_active(ttr))
+    {
+        TTRRecord *record = ttr_get_active(ttr);
+        record->message = comment;
+        result = TTR_SUCCESS;
+    }
+
+    return result;
+}

@@ -134,6 +134,38 @@ void test_unpause(Arena *arena)
     assert(TTR_ERROR == result);
 }
 
+void test_comment(Arena *arena)
+{
+    // test empty, started
+    TTR *ttr = ttr_init_empty(arena, 16);
+
+    Timestamp start = 1773058784;
+    Timestamp end = (Timestamp)(start + HOURS(2));
+    DateTime startDt = datetime_from_timestamp(start);
+    String comment = str_lit("some message");
+
+    // test comment with no active record
+    TTRReturnCode result = ttr_comment(ttr, start, comment);
+    assert(TTR_ERROR == result);
+
+    // test comment with active record
+    ttr_start(ttr, start);
+    result = ttr_comment(ttr, start, comment);
+    assert(TTR_SUCCESS == result);
+    TTRRecord *current = ttr_get_day(ttr, startDt);
+    assert(string_equals(comment, current->message));
+
+    // test on ended comment
+    ttr_end(ttr, end);
+    result = ttr_comment(ttr, start, comment);
+    assert(TTR_ERROR == result);
+
+    // test with 0 timestamp
+    ttr_start(ttr, 0);
+    result = ttr_comment(ttr, 0, comment);
+    assert(TTR_SUCCESS == result);
+}
+
 int test_ttr(int argc, char **argv)
 {
     printf("Test TTR\n");
@@ -148,6 +180,7 @@ int test_ttr(int argc, char **argv)
     test_end(&arena);
     test_pause(&arena);
     test_unpause(&arena);
+    test_comment(&arena);
 
     return 0;
 }

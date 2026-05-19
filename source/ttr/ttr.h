@@ -40,6 +40,11 @@ struct TTR
     U64 count;
 };
 
+// TODO(speciial): i'm not sure if the api for accessing records is 
+//                 what i actually need for all the upcoming features.
+//                 perhaps something that queries for a record and 
+//                 returns an index to the record is more useful to me.
+
 TTR *ttr_init_empty(Arena *arena, U64 capacity);
 TTR *ttr_init_from_file(Arena *arena, String recordFile, U64 additionalCapacity);
 
@@ -47,6 +52,8 @@ TTR *ttr_init_from_file(Arena *arena, String recordFile, U64 additionalCapacity)
 void ttr_save_to_file(Arena *arena, TTR *ttr, String recordFile);
 
 TTRRecord *ttr_get_active(TTR *ttr);
+
+// TODO(speciial): rename to ttr_get_by_day and add ttr_get_by_timestamp
 TTRRecord *ttr_get_day(TTR *ttr, DateTime dateTime);
 B32 ttr_has_active(TTR *ttr);
 B32 ttr_has_day(TTR *ttr, DateTime dateTime);
@@ -55,5 +62,6 @@ TTRReturnCode ttr_start(TTR *ttr, Timestamp timestamp);
 TTRReturnCode ttr_end(TTR *ttr, Timestamp timestamp);
 TTRReturnCode ttr_pause(TTR *ttr, Timestamp timestamp);
 TTRReturnCode ttr_unpause(TTR *ttr, Timestamp timestamp);
+TTRReturnCode ttr_comment(TTR *ttr, Timestamp timestamp, String comment);
 
 #endif // ttr_h
