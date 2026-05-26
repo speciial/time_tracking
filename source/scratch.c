@@ -67,21 +67,11 @@ void print_record_data(Arena *arena)
 {
     TTR *ttr = ttr_init_from_file(arena, str_lit("ttr_test_data.records"), 0);
 
-    for (S32 recordIndex = 0; recordIndex < ttr->count; ++recordIndex)
-    {
-        TTRRecord *record = &ttr->records[recordIndex];
+    String status = ttr_status(&arena, ttr, 1770275731);
+    fprintf(stdout, "%.*s\n", (int)status.length, status.content);
 
-        DateTime startDt = datetime_from_timestamp(record->timer.start);
-        DateTime endDt = datetime_from_timestamp(record->timer.end);
-
-        S64 netWorkTimeInSeconds = timer_total_active_time_seconds(&record->timer);
-        F32 netWorkTime = (F32)netWorkTimeInSeconds / (F32)(60 * 60);
-
-        fprintf(stdout, "%02d.%02d.%d: %02d:%02d - %02d:%02d, %.2f\n",
-                record->day.day, record->day.month, record->day.year,
-                startDt.hour, startDt.minute, endDt.hour, endDt.minute,
-                netWorkTime);
-    }
+    String month = ttr_log(&arena, ttr, 2025, 12);
+    fprintf(stdout, "%.*s\n", (int)month.length, month.content);
 }
 
 int main(int argc, char **argv)

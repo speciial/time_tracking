@@ -1,6 +1,7 @@
 #include "ttr.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <base_datetime.h>
@@ -156,7 +157,6 @@ TTRReturnCode ttr_pause(TTR *ttr, Timestamp timestamp)
         {
             result = TTR_SUCCESS;
         }
-
     }
     return result;
 }
@@ -175,7 +175,6 @@ TTRReturnCode ttr_unpause(TTR *ttr, Timestamp timestamp)
         {
             result = TTR_SUCCESS;
         }
-
     }
     return result;
 }
@@ -183,6 +182,7 @@ TTRReturnCode ttr_unpause(TTR *ttr, Timestamp timestamp)
 TTRReturnCode ttr_comment(TTR *ttr, Timestamp timestamp, String comment)
 {
     TTRReturnCode result = TTR_ERROR;
+    // TODO(speciial): this is not being used but should be
     Timestamp commentTime = (timestamp == 0) ? get_current_timestamp() : timestamp;
 
     if (ttr_has_active(ttr))
@@ -190,6 +190,106 @@ TTRReturnCode ttr_comment(TTR *ttr, Timestamp timestamp, String comment)
         TTRRecord *record = ttr_get_active(ttr);
         record->message = comment;
         result = TTR_SUCCESS;
+    }
+    return result;
+}
+
+String ttr_status(Arena *arena, TTR *ttr, Timestamp timestamp)
+{
+    String result = { 0 };
+    Timestamp statusTime = (timestamp == 0) ? get_current_timestamp() : timestamp;
+    DateTime statusDt = datetime_from_timestamp(statusTime);
+
+    TTRRecord *record = ttr_get_day(ttr, statusDt);
+    if (record)
+    {
+        result = ttr_format_timer_string(arena, record->timer);
+    }
+    else
+    {
+        // TODO(speciial): alloc reponse string?
+        // result = str_lit("No record found for given date.");
+    }
+    return result;
+}
+
+String ttr_log(Arena *arena, TTR *ttr, U16 year, U16 month)
+{
+    String result = { 0 };
+
+    if (ttr->count > 0)
+    {
+        StringList stringList = { 0 };
+        TTRRecord *current;
+
+        for (U64 recordIndex = 0; recordIndex < ttr->count; recordIndex++)
+        {
+            current = &ttr->records[recordIndex];
+            if (current->day.year == year && current->day.month == month)
+            {
+                string_list_append(arena, &stringList, ttr_format_timer_string(arena, current->timer));
+            }
+        }
+
+        result = string_list_flatten(arena, &stringList);
+    }
+    return result;
+}
+
+String ttr_format_timer_string(Arena *arena, Timer timer)
+{
+    // TODO(speciial): this implementation for the formatting will probably replaced 
+    // later on since it doesn't cover all the features I'd like to provide with this 
+    // tool.
+
+    String result = string_alloc(arena, 128);
+    S32 printedLength = 0;
+
+    DateTime startDt = datetime_from_timestamp(timer.start);
+    if (timer.state == TIMER_STATE_STARTED)
+    {
+        // [STARTED] 19.05., 08:30, NET: 3.45h, PAUSE: 0.75h
+        F32 netWorkTimeHours = (F32)timer_total_active_time_seconds(&timer) / (60.0f * 60.0f);
+        F32 pauseTimeHours = (F32)timer.totalPauseTimeSeconds / (60.0f * 60.0f);
+
+        printedLength = snprintf(result.content, result.length,
+                                 "[STARTED] %02d.%02d., %02d:%02d, NET: %.2fh, PAUSE: %.2fh\n",
+                                 startDt.day, startDt.month, startDt.hour, startDt.minute,
+                                 netWorkTimeHours, pauseTimeHours);
+    }
+    else if (timer.state == TIMER_STATE_PAUSED)
+    {
+        // [PAUSED] 19.05., 08:30, NET: 4.56h, PAUSE: 1.3h
+        F32 netWorkTimeHours = (F32)timer_total_active_time_seconds(&timer) / (60.0f * 60.0f);
+        F32 pauseTimeHours = (F32)timer.totalPauseTimeSeconds / (60.0f * 60.0f);
+
+        printedLength = snprintf(result.content, result.length,
+                                 "[PAUSED] %02d.%02d., %02d:%02d, NET: %.2fh, PAUSE: %.2fh\n",
+                                 startDt.day, startDt.month, startDt.hour, startDt.minute,
+                                 netWorkTimeHours, pauseTimeHours);
+    }
+    else if (timer.state == TIMER_STATE_ENDED)
+    {
+        // [ENDED] 19.05., 08:30 - 16:30, NET: 7.5h, PAUSE: 0.75h, TOTAL: 8.25h
+        DateTime endDt = datetime_from_timestamp(timer.end);
+        F32 netWorkTimeHours = (F32)timer_total_active_time_seconds(&timer) / (60.0f * 60.0f);
+        F32 pauseTimeHours = (F32)timer.totalPauseTimeSeconds / (60.0f * 60.0f);
+
+        printedLength = snprintf(result.content, result.length,
+                                 "[ENDED] %02d.%02d., %02d:%02d - %02d:%02d, NET: %.2fh, PAUSE: %.2fh, TOTAL: %.2fh\n",
+                                 startDt.day, startDt.month,
+                                 startDt.hour, startDt.minute, endDt.hour, endDt.minute,
+                                 netWorkTimeHours, pauseTimeHours, (netWorkTimeHours + pauseTimeHours));
+    }
+    else
+    {
+        // TODO(speciial): free alloced string?
+        S32 printedLength = 0;
+    }
+
+    if (printedLength > 0)
+    {
+        result.length = printedLength;
     }
 
     return result;

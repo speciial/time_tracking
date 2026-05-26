@@ -8,6 +8,12 @@
 
 #include "timer.h" 
 
+/*
+    Things I still want to do:
+    - [ ] Options for printing more information in status and log (net, pause, total, overtimer, etc.)
+*/
+
+
 typedef enum TTRReturnCode TTRReturnCode;
 enum TTRReturnCode
 {
@@ -63,5 +69,10 @@ TTRReturnCode ttr_end(TTR *ttr, Timestamp timestamp);
 TTRReturnCode ttr_pause(TTR *ttr, Timestamp timestamp);
 TTRReturnCode ttr_unpause(TTR *ttr, Timestamp timestamp);
 TTRReturnCode ttr_comment(TTR *ttr, Timestamp timestamp, String comment);
+
+String ttr_status(Arena *arena, TTR *ttr, Timestamp timestamp);
+String ttr_log(Arena *arena, TTR *ttr, U16 year, U16 month);
+
+String ttr_format_timer_string(Arena *arena, Timer timer);
 
 #endif // ttr_h

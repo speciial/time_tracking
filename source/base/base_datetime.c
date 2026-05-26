@@ -31,7 +31,7 @@ DateTime datetime_from_timestamp(Timestamp timestamp)
     DateTime result = { 0 };
 
     time_t timeValue = (time_t)timestamp;
-    struct tm *timeInfo = gmtime(&timeValue);
+    struct tm *timeInfo = localtime(&timeValue);
     if (timeInfo)
     {
         result.year = (U16)(timeInfo->tm_year + 1900);
@@ -72,6 +72,6 @@ B32 is_same_datetime(DateTime dt1, DateTime dt2)
 B32 is_weekday(Timestamp timestamp)
 {
     time_t timeValue = (time_t)timestamp;
-    struct tm *timeInfo = gmtime(&timestamp);
+    struct tm *timeInfo = localtime(&timestamp);
     return (timeInfo->tm_wday != 0) && (timeInfo->tm_wday != 6);
 }
