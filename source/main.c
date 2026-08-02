@@ -23,6 +23,7 @@ struct CommandArgs
     Timestamp timestamp;
     String timeFormat;
     String comment;
+    TTRWorkLocation workLocation;
     U16 year;
     U16 month;
 
@@ -113,11 +114,13 @@ Timestamp parse_timestamp_string(String timestampString, String timeFormat)
 CommandArgs parse_command_args(StringArray args)
 {
     // TODO(speciial): check if arg is supported for command
+    // TODO(speciial): check if arg is required for command
     // TODO(speciial): reduce code duplication
     CommandArgs result = {
         .timestamp = 0,
         .timeFormat = str_lit("hh:mm"), // TODO(speciial): this should probably be alloced
         .comment = { 0 },
+        .workLocation = TTR_WORK_LOCATION_REMOTE,
         .year = 0,
         .month = 0,
         .parseFailed = 0
@@ -194,6 +197,38 @@ CommandArgs parse_command_args(StringArray args)
                 break;
             }
         }
+        if (string_equals(str_lit("-l"), arg) || string_equals(str_lit("-location"), arg))
+        {
+            // TODO(speciial): this should be required
+            if (argIndex < (args.count - 1))
+            {
+                String workLocation = args.strings[argIndex + 1];
+                if (string_equals(str_lit("remote"), workLocation))
+                {
+                    result.workLocation = TTR_WORK_LOCATION_REMOTE;
+                }
+                else if (string_equals(str_lit("office"), workLocation))
+                {
+                    result.workLocation = TTR_WORK_LOCATION_OFFICE;
+                }
+                else if (string_equals(str_lit("travel"), workLocation))
+                {
+                    result.workLocation = TTR_WORK_LOCATION_TRAVEL;
+                }
+                else
+                {
+                    printf("Unkown work location option %.*s", (S32)workLocation.length, workLocation.content);
+                    result.parseFailed = 1;
+                    break;
+                }
+            }
+            else
+            {
+                fprintf(stderr, "Argument location is missing the value\n");
+                result.parseFailed = 1;
+                break;
+            }
+        }
     }
 
     if (!result.parseFailed && timestampString.length > 0)
@@ -221,7 +256,7 @@ int main(int argc, char **argv)
 
             if (string_equals(str_lit("start"), command))
             {
-                TTRReturnCode returnCode = ttr_start(ttr, commandArgs.timestamp);
+                TTRReturnCode returnCode = ttr_start(ttr, commandArgs.timestamp, commandArgs.workLocation);
                 if (returnCode == TTR_SUCCESS)
                 {
                     // TODO(speciial): I really don't like the api in this if case!

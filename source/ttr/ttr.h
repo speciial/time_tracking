@@ -21,6 +21,14 @@ enum TTRReturnCode
     TTR_ERROR
 };
 
+typedef enum TTRWorkLocation TTRWorkLocation;
+enum TTRWorkLocation
+{
+    TTR_WORK_LOCATION_REMOTE = 0,
+    TTR_WORK_LOCATION_OFFICE,
+    TTR_WORK_LOCATION_TRAVEL,
+};
+
 typedef struct TTRHeader TTRHeader;
 struct TTRHeader
 {
@@ -34,6 +42,7 @@ struct TTRRecord
     Timer timer;
     DateTime day;
     String message;
+    TTRWorkLocation location;
 };
 
 typedef struct TTR TTR;
@@ -63,7 +72,7 @@ TTRRecord *ttr_get_day(TTR *ttr, DateTime dateTime);
 B32 ttr_has_active(TTR *ttr);
 B32 ttr_has_day(TTR *ttr, DateTime dateTime);
 
-TTRReturnCode ttr_start(TTR *ttr, Timestamp timestamp);
+TTRReturnCode ttr_start(TTR *ttr, Timestamp timestamp, TTRWorkLocation workLocation);
 TTRReturnCode ttr_end(TTR *ttr, Timestamp timestamp);
 TTRReturnCode ttr_pause(TTR *ttr, Timestamp timestamp);
 TTRReturnCode ttr_unpause(TTR *ttr, Timestamp timestamp);

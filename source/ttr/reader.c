@@ -99,6 +99,10 @@ TTR *ttr_read_entries(Arena *arena, TTRHeader header, String fileContent, U64 ad
                 String stateString = string_sub_string(remaining, 0, commaIndex);
                 remaining = string_advance(remaining, commaIndex + 1);
 
+                commaIndex = string_index_of_u8(remaining, ',');
+                String workLocationString = string_sub_string(remaining, 0, commaIndex);
+                remaining = string_advance(remaining, commaIndex + 1);
+
                 S64 endOfLineIndex = string_index_of_u8(remaining, ';');
                 String messageString = string_sub_string(remaining, 0, endOfLineIndex);
                 remaining = string_advance(remaining, endOfLineIndex + 1);
@@ -110,6 +114,7 @@ TTR *ttr_read_entries(Arena *arena, TTRHeader header, String fileContent, U64 ad
                 current->timer.lastPause = string_to_u64(lastPauseString);
                 current->timer.totalPauseTimeSeconds = (S64)string_to_u64(pauseTimeString);
                 current->timer.state = timer_state_from_string(stateString);
+                current->location = work_location_from_string(workLocationString);
                 current->day = datetime_from_timestamp(current->timer.start);
                 current->message = string_sub_string(messageString, 1, messageString.length - 1);
 
@@ -157,6 +162,24 @@ TimerState timer_state_from_string(String stateString)
     else if (string_equals(stateString, str_lit("TIMER_STATE_PAUSED")))
     {
         result = TIMER_STATE_PAUSED;
+    }
+    return result;
+}
+
+TTRWorkLocation work_location_from_string(String workLocationString)
+{
+    TTRWorkLocation result = TTR_WORK_LOCATION_REMOTE;
+    if (string_equals(str_lit("TTR_WORK_LOCATION_REMOTE"), workLocationString))
+    {
+        result = TTR_WORK_LOCATION_REMOTE;
+    }
+    else if (string_equals(str_lit("TTR_WORK_LOCATION_OFFICE"), workLocationString))
+    {
+        result = TTR_WORK_LOCATION_OFFICE;
+    }
+    else if (string_equals(str_lit("TTR_WORK_LOCATION_TRAVEL"), workLocationString))
+    {
+        result = TTR_WORK_LOCATION_TRAVEL;
     }
     return result;
 }

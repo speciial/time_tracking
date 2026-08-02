@@ -18,7 +18,7 @@ void test_start(Arena *arena)
     Timestamp start = 1773058784;
     DateTime startDt = datetime_from_timestamp(start);
 
-    TTRReturnCode result = ttr_start(ttr, start);
+    TTRReturnCode result = ttr_start(ttr, start, TTR_WORK_LOCATION_REMOTE);
     assert(TTR_SUCCESS == result);
 
     TTRRecord *current = ttr_get_day(ttr, startDt);
@@ -28,10 +28,10 @@ void test_start(Arena *arena)
 
     // test dirty
     ttr = ttr_init_empty(arena, 16);
-    result = ttr_start(ttr, 0);
+    result = ttr_start(ttr, 0, TTR_WORK_LOCATION_REMOTE);
     assert(TTR_SUCCESS == result);
 
-    result = ttr_start(ttr, 0);
+    result = ttr_start(ttr, 0, TTR_WORK_LOCATION_REMOTE);
     assert(TTR_ERROR == result);
 }
 
@@ -44,7 +44,7 @@ void test_end(Arena *arena)
     Timestamp end = (Timestamp)(1773058784 + HOURS(2));
     DateTime startDt = datetime_from_timestamp(start);
 
-    ttr_start(ttr, start);
+    ttr_start(ttr, start, TTR_WORK_LOCATION_REMOTE);
     TTRReturnCode result = ttr_end(ttr, end);
     assert(TTR_SUCCESS == result);
 
@@ -62,7 +62,7 @@ void test_end(Arena *arena)
 
     // test dirty, already ended 
     ttr = ttr_init_empty(arena, 16);
-    ttr_start(ttr, 0);
+    ttr_start(ttr, 0, TTR_WORK_LOCATION_REMOTE);
     ttr_end(ttr, 0);
     result = ttr_end(ttr, 0);
     assert(TTR_ERROR == result);
@@ -77,7 +77,7 @@ void test_pause(Arena *arena)
     Timestamp end = (Timestamp)(1773058784 + HOURS(2));
     DateTime startDt = datetime_from_timestamp(start);
 
-    ttr_start(ttr, start);
+    ttr_start(ttr, start, TTR_WORK_LOCATION_REMOTE);
     TTRReturnCode result = ttr_pause(ttr, pause);
     assert(TTR_SUCCESS == result);
 
@@ -87,14 +87,14 @@ void test_pause(Arena *arena)
 
     // test empty, not started
     ttr = ttr_init_empty(arena, 16);
-    ttr_start(ttr, 0);
+    ttr_start(ttr, 0, TTR_WORK_LOCATION_REMOTE);
     ttr_end(ttr, 0);
     result = ttr_pause(ttr, 0);
     assert(TTR_ERROR == result);
 
     // test empty, paused
     ttr = ttr_init_empty(arena, 16);
-    ttr_start(ttr, 0);
+    ttr_start(ttr, 0, TTR_WORK_LOCATION_REMOTE);
     ttr_pause(ttr, 0);
     result = ttr_pause(ttr, 0);
     assert(TTR_ERROR == result);
@@ -111,7 +111,7 @@ void test_unpause(Arena *arena)
     Timestamp end = (Timestamp)(1773058784 + HOURS(2));
     DateTime startDt = datetime_from_timestamp(start);
 
-    ttr_start(ttr, start);
+    ttr_start(ttr, start, TTR_WORK_LOCATION_REMOTE);
     ttr_pause(ttr, pause);
     TTRReturnCode result = ttr_unpause(ttr, unpause);
     assert(TTR_SUCCESS == result);
@@ -127,7 +127,7 @@ void test_unpause(Arena *arena)
 
     // test empty, not paused
     ttr = ttr_init_empty(arena, 16);
-    ttr_start(ttr, 0);
+    ttr_start(ttr, 0, TTR_WORK_LOCATION_REMOTE);
     result = ttr_unpause(ttr, 0);
     assert(TTR_ERROR == result);
 }
@@ -147,7 +147,7 @@ void test_comment(Arena *arena)
     assert(TTR_ERROR == result);
 
     // test comment with active record
-    ttr_start(ttr, start);
+    ttr_start(ttr, start, TTR_WORK_LOCATION_REMOTE);
     result = ttr_comment(ttr, start, comment);
     assert(TTR_SUCCESS == result);
     TTRRecord *current = ttr_get_day(ttr, startDt);
@@ -159,7 +159,7 @@ void test_comment(Arena *arena)
     assert(TTR_SUCCESS == result);
 
     // test with 0 timestamp
-    ttr_start(ttr, 0);
+    ttr_start(ttr, 0, TTR_WORK_LOCATION_REMOTE);
     result = ttr_comment(ttr, 0, comment);
     assert(TTR_SUCCESS == result);
 }
@@ -186,7 +186,7 @@ void test_end_to_end(Arena *arena)
 
     Timestamp start = currentlyActiveStart + DAYS(1);
     String comment = str_lit("some message");
-    ttr_start(ttr, start);
+    ttr_start(ttr, start, TTR_WORK_LOCATION_REMOTE);
     ttr_comment(ttr, start, comment);
 
     currentlyActive = ttr_get_active(ttr);

@@ -58,7 +58,7 @@ void test_read_entries_empty(Arena *arena)
 
 void test_read_entries_single_row(Arena *arena)
 {
-    String fileContent = str_lit("<version=2;entries=1;>\n0:1773058784,1773058784,0,0,TIMER_STATE_ENDED,\"Some Message\";");
+    String fileContent = str_lit("<version=2;entries=1;>\n0:1773058784,1773058784,0,0,TIMER_STATE_ENDED,TTR_WORK_LOCATION_OFFICE,\"Some Message\";");
     TTRHeader header = ttr_read_header(fileContent);
 
     TTR *ttr = ttr_read_entries(arena, header, fileContent, 1);
@@ -77,7 +77,7 @@ void test_read_entries_single_row(Arena *arena)
 
 void test_read_entries_multiple_rows(Arena *arena)
 {
-    String fileContent = str_lit("<version=2;entries=2;>\n0:1773058784,1773058784,0,0,TIMER_STATE_ENDED,\"Some Message\";\n1:1773385216,0,0,0,TIMER_STATE_STARTED,\"Text goes here\";");
+    String fileContent = str_lit("<version=2;entries=2;>\n0:1773058784,1773058784,0,0,TIMER_STATE_ENDED,TTR_WORK_LOCATION_OFFICE,\"Some Message\";\n1:1773385216,0,0,0,TIMER_STATE_STARTED,TTR_WORK_LOCATION_OFFICE,\"Text goes here\";");
     TTRHeader header = ttr_read_header(fileContent);
 
     TTR *ttr = ttr_read_entries(arena, header, fileContent, 1);

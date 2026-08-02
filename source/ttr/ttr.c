@@ -104,7 +104,7 @@ B32 ttr_has_day(TTR *ttr, DateTime dateTime)
     return result;
 }
 
-TTRReturnCode ttr_start(TTR *ttr, Timestamp timestamp)
+TTRReturnCode ttr_start(TTR *ttr, Timestamp timestamp, TTRWorkLocation workLocation)
 {
     assert(ttr->count < ttr->capacity);
 
@@ -124,6 +124,7 @@ TTRReturnCode ttr_start(TTR *ttr, Timestamp timestamp)
             ttr->currentlyActiveIndex = ttr->count;
             ttr->count++;
             record->day = startDt;
+            record->location = workLocation;
             result = TTR_SUCCESS;
         }
     }

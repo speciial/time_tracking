@@ -26,7 +26,7 @@ void create_test_data(Arena *arena)
         DateTime startDt = datetime_from_timestamp(baseTimestamp);
         startDt.hour = 8;
         startDt.minute = 15;
-        ttr_start(ttr, timestamp_from_datetime(startDt));
+        ttr_start(ttr, timestamp_from_datetime(startDt), TTR_WORK_LOCATION_REMOTE);
 
         if ((dayOffset % 3) == 0)
         {

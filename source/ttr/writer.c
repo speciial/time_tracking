@@ -44,6 +44,7 @@ String ttr_convert_entries_to_string(Arena *arena, TTR *ttr)
     {
         String *message = &ttr->records[recordIndex].message;
         Timer *timer = &ttr->records[recordIndex].timer;
+        TTRWorkLocation workLocation = ttr->records[recordIndex].location;
 
         // TODO(speciial): move this to timer? 
         String timerStateString = { 0 };
@@ -66,12 +67,32 @@ String ttr_convert_entries_to_string(Arena *arena, TTR *ttr)
             break;
         }
 
+        String workLocationString = { 0 };
+        if (workLocation == TTR_WORK_LOCATION_REMOTE)
+        {
+            workLocationString = str_lit("TTR_WORK_LOCATION_REMOTE");
+        }
+        else if (workLocation == TTR_WORK_LOCATION_OFFICE)
+        {
+            workLocationString = str_lit("TTR_WORK_LOCATION_OFFICE");
+        }
+        else if (workLocation == TTR_WORK_LOCATION_TRAVEL)
+        {
+            workLocationString = str_lit("TTR_WORK_LOCATION_TRAVEL");
+        }
+        else
+        {
+            fprintf(stdout, "[TTR_WRITER]: Failed to write record with index %lld. Record work location was unkown value.\n", recordIndex);
+            failedToConvert = 1;
+            break;
+        }
 
         String recordString = string_alloc(arena, 256 + message->length);
         S32 printedRecordStringLength = snprintf(recordString.content, recordString.length,
-                                                 "%lld:%lld,%lld,%lld,%lld,%.*s,\"%.*s\";\n",
+                                                 "%lld:%lld,%lld,%lld,%lld,%.*s,%.*s,\"%.*s\";\n",
                                                  recordIndex, timer->start, timer->end, timer->lastPause, timer->totalPauseTimeSeconds,
                                                  (S32)timerStateString.length, timerStateString.content,
+                                                 (S32)workLocationString.length, workLocationString.content,
                                                  (S32)message->length, message->content);
         if (printedRecordStringLength > 0)
         {

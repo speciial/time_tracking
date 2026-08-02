@@ -33,7 +33,8 @@ void test_write_single_row(Arena *arena)
                 .lastPause = 0,
                 .totalPauseTimeSeconds = 0,
                 .state = TIMER_STATE_ENDED
-            }
+            },
+            .location = TTR_WORK_LOCATION_REMOTE
         }
     };
 
@@ -46,7 +47,7 @@ void test_write_single_row(Arena *arena)
 
     String writeResult = ttr_convert_entries_to_string(arena, &ttr);
 
-    assert(string_equals(str_lit("<version=2;entries=1;>\n0:1773058784,1773058784,0,0,TIMER_STATE_ENDED,\"Some Message\";\n"), writeResult));
+    assert(string_equals(str_lit("<version=2;entries=1;>\n0:1773058784,1773058784,0,0,TIMER_STATE_ENDED,TTR_WORK_LOCATION_REMOTE,\"Some Message\";\n"), writeResult));
 }
 
 int test_writer(int argc, char **argv)
