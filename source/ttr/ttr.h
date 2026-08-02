@@ -11,8 +11,8 @@
 /*
     Things I still want to do:
     - [ ] Options for printing more information in status and log (net, pause, total, overtimer, etc.)
+    - [ ] Better error codes to show what went wrong!
 */
-
 
 typedef enum TTRReturnCode TTRReturnCode;
 enum TTRReturnCode

@@ -1,5 +1,6 @@
 add_subdirectory( base )
 add_subdirectory( ttr )
+add_subdirectory( scratch )
 
 add_executable( ${PROJECT_NAME} 
     main.c

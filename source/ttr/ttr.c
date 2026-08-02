@@ -227,12 +227,17 @@ String ttr_log(Arena *arena, TTR *ttr, U16 year, U16 month)
         StringList stringList = { 0 };
         TTRRecord *current;
 
+        DateTime currentDt = get_current_datetime();
+        year = (year == 0) ? currentDt.year : year;
+        month = (month == 0) ? currentDt.month : month;
+
         for (U64 recordIndex = 0; recordIndex < ttr->count; recordIndex++)
         {
             current = &ttr->records[recordIndex];
             if (current->day.year == year && current->day.month == month)
             {
-                string_list_append(arena, &stringList, ttr_format_timer_string(arena, current->timer));
+                String timerString = ttr_format_timer_string(arena, current->timer);
+                string_list_append(arena, &stringList, timerString);
             }
         }
 
