@@ -22,6 +22,9 @@ Timestamp timestamp_from_datetime(DateTime dateTime)
     timeInfo.tm_min = dateTime.minute;
     timeInfo.tm_sec = dateTime.second;
 
+    // NOTE(speciial): -1 should force mktime to determine dst automatically
+    timeInfo.tm_isdst = -1;
+
     time_t timeValue = mktime(&timeInfo);
     return (Timestamp)timeValue;
 }

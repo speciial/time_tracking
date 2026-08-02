@@ -8,6 +8,7 @@
 
 #include <ttr.h>
 
+// TODO(speciial): move this to base_string.h
 typedef struct StringArray StringArray;
 struct StringArray
 {
@@ -62,30 +63,36 @@ Timestamp parse_timestamp_string(String timestampString, String timeFormat)
     for (U64 formatIndex = 0; formatIndex + 1 < timeFormat.length; formatIndex += 2)
     {
         String currentIdentifier = string_sub_string(timeFormat, formatIndex, formatIndex + 2);
+        String numberString = string_sub_string(timestampString, formatIndex, formatIndex + 2);
+        if (numberString.length > 0 && numberString.content[0] == '0')
+        {
+            numberString = string_advance(numberString, 1);
+        }
+
         if (string_equals(str_lit("yy"), currentIdentifier))
         {
-            dt.year = 2000 + string_to_u16(currentIdentifier);
+            dt.year = 2000 + string_to_u16(numberString);
         }
         else if (string_equals(str_lit("MM"), currentIdentifier))
         {
-            dt.month = string_to_u16(currentIdentifier);
+            dt.month = string_to_u16(numberString);
         }
         else if (string_equals(str_lit("dd"), currentIdentifier))
         {
-            dt.day = string_to_u16(currentIdentifier);
+            dt.day = string_to_u16(numberString);
         }
         else if (string_equals(str_lit("hh"), currentIdentifier))
         {
-            dt.hour = string_to_u16(currentIdentifier);
+            dt.hour = string_to_u16(numberString);
         }
         else if (string_equals(str_lit("mm"), currentIdentifier))
         {
-            dt.minute = string_to_u16(currentIdentifier);
+            dt.minute = string_to_u16(numberString);
         }
         else
         {
             fprintf(stderr, "Failed to parse time format %.*s\n", (S32)timeFormat.length, timeFormat.content);
-            failedToParse = 0;
+            failedToParse = 1;
             break;
         }
 
@@ -238,7 +245,7 @@ int main(int argc, char **argv)
                     ttr_save_to_file(&stringArena, ttr, str_lit("ttr.records"));
 
                     TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(commandArgs.timestamp));
-                    DateTime currentDt = datetime_from_timestamp(current->timer.start);
+                    DateTime currentDt = datetime_from_timestamp(current->timer.end);
                     fprintf(stdout, "Ended time tracking at %02d.%02d. %02d:%02d\n",
                             currentDt.month, currentDt.day, currentDt.hour, currentDt.minute);
                 }
@@ -255,7 +262,7 @@ int main(int argc, char **argv)
                     ttr_save_to_file(&stringArena, ttr, str_lit("ttr.records"));
 
                     TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(commandArgs.timestamp));
-                    DateTime currentDt = datetime_from_timestamp(current->timer.start);
+                    DateTime currentDt = datetime_from_timestamp(current->timer.lastPause);
                     fprintf(stdout, "Paused time tracking at %02d.%02d. %02d:%02d\n",
                             currentDt.month, currentDt.day, currentDt.hour, currentDt.minute);
                 }
@@ -272,7 +279,9 @@ int main(int argc, char **argv)
                     ttr_save_to_file(&stringArena, ttr, str_lit("ttr.records"));
 
                     TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(commandArgs.timestamp));
-                    DateTime currentDt = datetime_from_timestamp(current->timer.start);
+                    // NOTE(speciial): this is broken. I can't cleanly determine the unpause time here. I also don't know,
+                    //                 if I like this kind of print anyway.
+                    DateTime currentDt = datetime_from_timestamp(current->timer.lastPause);
                     fprintf(stdout, "Unpaused time tracking at %02d.%02d. %02d:%02d\n",
                             currentDt.month, currentDt.day, currentDt.hour, currentDt.minute);
                 }
