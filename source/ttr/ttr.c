@@ -19,6 +19,7 @@ TTR *ttr_init_empty(Arena *arena, U64 capacity)
     result->capacity = capacity;
     result->count = 0;
     result->records = push_array(arena, TTRRecord, result->capacity);
+    result->currentlyActiveIndex = -1;
 
     return result;
 }
@@ -34,16 +35,20 @@ TTR *ttr_init_from_file(Arena *arena, String recordFile, U64 additionalCapacity)
         {
             // TODO(speciial): move ttr_read_header into ttr_read_entries
             TTRHeader header = ttr_read_header(fileContent);
-            result = ttr_read_entries(arena, header, fileContent);
+            result = ttr_read_entries(arena, header, fileContent, additionalCapacity);
         }
     }
     return result;
 }
 
-void ttr_save_to_file(Arena *arena, TTR *ttr, String recordFile)
+TTRReturnCode ttr_save_to_file(Arena *arena, TTR *ttr, String recordFile)
 {
-    // TODO(speciial): implement this properly!
-    ttr_write_entries(arena, ttr, recordFile);
+    TTRReturnCode result = TTR_ERROR;
+    if (ttr_write_entries(arena, ttr, recordFile))
+    {
+        result = TTR_SUCCESS;
+    }
+    return result;
 }
 
 TTRRecord *ttr_get_active(TTR *ttr)
@@ -51,12 +56,9 @@ TTRRecord *ttr_get_active(TTR *ttr)
     assert(ttr->count < ttr->capacity);
 
     TTRRecord *result = 0;
-    // NOTE(speciial): there should never be a case where an active record
-    //                 isn't the last in the list!
-    if (ttr->records[ttr->count].timer.state != TIMER_STATE_UNINITIALIZED
-        && ttr->records[ttr->count].timer.state != TIMER_STATE_ENDED)
+    if (ttr_has_active(ttr))
     {
-        result = &ttr->records[ttr->count];
+        result = &ttr->records[ttr->currentlyActiveIndex];
     }
     return result;
 }
@@ -80,8 +82,9 @@ TTRRecord *ttr_get_day(TTR *ttr, DateTime dateTime)
 B32 ttr_has_active(TTR *ttr)
 {
     assert(ttr->count < ttr->capacity);
-    B32 result = (ttr->records[ttr->count].timer.state != TIMER_STATE_UNINITIALIZED
-                  && ttr->records[ttr->count].timer.state != TIMER_STATE_ENDED);
+    B32 result = (ttr->currentlyActiveIndex >= 0)
+        && (ttr->records[ttr->currentlyActiveIndex].timer.state != TIMER_STATE_UNINITIALIZED)
+        && (ttr->records[ttr->currentlyActiveIndex].timer.state != TIMER_STATE_ENDED);
     return result;
 }
 
@@ -112,11 +115,14 @@ TTRReturnCode ttr_start(TTR *ttr, Timestamp timestamp)
     Timestamp start = (timestamp == 0) ? get_current_timestamp() : timestamp;
     DateTime startDt = datetime_from_timestamp(start);
 
+    // TODO(speciial): restart day that has ended?
     if (!ttr_has_active(ttr) && !ttr_has_day(ttr, startDt))
     {
         TTRRecord *record = &ttr->records[ttr->count];
         if (timer_start(&record->timer, start) == TIMER_RESULT_SUCCESS)
         {
+            ttr->currentlyActiveIndex = ttr->count;
+            ttr->count++;
             record->day = startDt;
             result = TTR_SUCCESS;
         }
@@ -136,7 +142,7 @@ TTRReturnCode ttr_end(TTR *ttr, Timestamp timestamp)
         TTRRecord *record = ttr_get_active(ttr);
         if (timer_end(&record->timer, end) == TIMER_RESULT_SUCCESS)
         {
-            ttr->count++;
+            ttr->currentlyActiveIndex = -1;
             result = TTR_SUCCESS;
         }
     }
@@ -182,12 +188,11 @@ TTRReturnCode ttr_unpause(TTR *ttr, Timestamp timestamp)
 TTRReturnCode ttr_comment(TTR *ttr, Timestamp timestamp, String comment)
 {
     TTRReturnCode result = TTR_ERROR;
-    // TODO(speciial): this is not being used but should be
     Timestamp commentTime = (timestamp == 0) ? get_current_timestamp() : timestamp;
 
-    if (ttr_has_active(ttr))
+    TTRRecord *record = ttr_get_day(ttr, datetime_from_timestamp(commentTime));
+    if (record != 0)
     {
-        TTRRecord *record = ttr_get_active(ttr);
         record->message = comment;
         result = TTR_SUCCESS;
     }

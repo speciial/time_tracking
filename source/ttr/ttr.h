@@ -44,6 +44,7 @@ struct TTR
     TTRRecord *records;
     U64 capacity;
     U64 count;
+    S64 currentlyActiveIndex;
 };
 
 // TODO(speciial): i'm not sure if the api for accessing records is 
@@ -53,9 +54,7 @@ struct TTR
 
 TTR *ttr_init_empty(Arena *arena, U64 capacity);
 TTR *ttr_init_from_file(Arena *arena, String recordFile, U64 additionalCapacity);
-
-// TODO(speciial): return value? error handling?
-void ttr_save_to_file(Arena *arena, TTR *ttr, String recordFile);
+TTRReturnCode ttr_save_to_file(Arena *arena, TTR *ttr, String recordFile);
 
 TTRRecord *ttr_get_active(TTR *ttr);
 

@@ -23,12 +23,14 @@ B32 file_read(String filePath, U8 *buffer, U64 size)
 
 B32 file_write(String filePath, U8 *buffer, U64 size)
 {
+    // TODO(speciial): this is not a safe operation. 
     B32 result = 0;
     FILE *fileHandle = fopen(filePath.content, "wb");
     if (fileHandle)
     {
         U64 bytesWritten = fwrite(buffer, sizeof(U8), size, fileHandle);
         result = (bytesWritten == size); // TODO(speciial): is this condition correct?
+        fclose(fileHandle);
     }
     return result;
 }

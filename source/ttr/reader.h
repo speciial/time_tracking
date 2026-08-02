@@ -7,7 +7,7 @@
 #include "ttr.h"
 
 TTRHeader ttr_read_header(String fileContent);
-TTR *ttr_read_entries(Arena *arena, TTRHeader header, String fileContent);
+TTR *ttr_read_entries(Arena *arena, TTRHeader header, String fileContent, U64 additionalCapacity);
 
 // Helpers
 TimerState timer_state_from_string(String stateString);

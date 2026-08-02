@@ -55,13 +55,14 @@ TTRHeader ttr_read_header(String fileContent)
     return result;
 }
 
-TTR *ttr_read_entries(Arena *arena, TTRHeader header, String fileContent)
+TTR *ttr_read_entries(Arena *arena, TTRHeader header, String fileContent, U64 additionalCapacity)
 {
     TTR *result = push_struct(arena, TTR);
     result->header = header;
-    result->capacity = header.entryCount + 16;
+    result->capacity = header.entryCount + additionalCapacity;
     result->count = 0;
     result->records = push_array(arena, TTRRecord, result->capacity);
+    result->currentlyActiveIndex = -1;
 
     if (result->header.entryCount != 0)
     {
@@ -112,11 +113,25 @@ TTR *ttr_read_entries(Arena *arena, TTRHeader header, String fileContent)
                 current->day = datetime_from_timestamp(current->timer.start);
                 current->message = string_sub_string(messageString, 1, messageString.length - 1);
 
+                if (current->timer.state == TIMER_STATE_STARTED || current->timer.state == TIMER_STATE_PAUSED)
+                {
+                    if (result->currentlyActiveIndex == -1)
+                    {
+                        result->currentlyActiveIndex = recordIndex;
+                    }
+                    else
+                    {
+                        // TODO(speciial): file corrupted
+                        printf("ERROR: Multiple active timers in record file.\n");
+                    }
+                }
+
                 result->count++;
             }
             else
             {
                 // TODO(speciial): file corrupted?
+                printf("ERROR: Multiple or skipped indices in record file.\n");
             }
 
             remaining = string_skip_white_spaces(remaining);

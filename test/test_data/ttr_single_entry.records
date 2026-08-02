@@ -1,3 +1,2 @@
-<version=1;entries=2;>
-0:1773058784,1773063784,0,0,TIMER_ENDED,"Some Message";
-1:1773385216,0,0,0,TIMER_STARTED,"Text goes here";
+<version=1;entries=1;>
+0:1773058784,1773063784,0,0,TIMER_STATE_ENDED,"Some Message";

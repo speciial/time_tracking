@@ -9,8 +9,6 @@ void test_init(Arena *arena)
 {
     TTR *ttr = ttr_init_empty(arena, 16);
     assert(0 != ttr);
-
-    // TODO(speciial): test init once file parsing is implemented
 }
 
 void test_start(Arena *arena)
@@ -158,12 +156,96 @@ void test_comment(Arena *arena)
     // test on ended comment
     ttr_end(ttr, end);
     result = ttr_comment(ttr, start, comment);
-    assert(TTR_ERROR == result);
+    assert(TTR_SUCCESS == result);
 
     // test with 0 timestamp
     ttr_start(ttr, 0);
     result = ttr_comment(ttr, 0, comment);
     assert(TTR_SUCCESS == result);
+}
+
+void test_end_to_end(Arena *arena)
+{
+    // file has 11 ended timers and 1 started timer
+    TTR *ttr = ttr_init_from_file(arena, str_lit("ttr_multiple_entries.records"), 2);
+    assert(-1 != ttr->currentlyActiveIndex);
+
+    TTRRecord *currentlyActive = ttr_get_active(ttr);
+    assert(0 != currentlyActive);
+
+    Timestamp currentlyActiveStart = currentlyActive->timer.start;
+    Timestamp currentlyActiveEnd = currentlyActiveStart + HOURS(8);
+    ttr_end(ttr, currentlyActiveEnd);
+    TTRReturnCode result = ttr_save_to_file(arena, ttr, str_lit("test_output/output.records"));
+    assert(TTR_ERROR != result);
+
+    // file now has 12 ended timers and 0 started
+    ttr = ttr_init_from_file(arena, str_lit("test_output/output.records"), 2);
+    assert(-1 == ttr->currentlyActiveIndex);
+    assert(0 != ttr_get_day(ttr, datetime_from_timestamp(currentlyActiveStart)));
+
+    Timestamp start = currentlyActiveStart + DAYS(1);
+    String comment = str_lit("some message");
+    ttr_start(ttr, start);
+    ttr_comment(ttr, start, comment);
+
+    currentlyActive = ttr_get_active(ttr);
+    assert(0 != currentlyActive);
+
+    result = ttr_save_to_file(arena, ttr, str_lit("test_output/output.records"));
+    assert(TTR_ERROR != result);
+
+    // file now has 12 ended timers and 1 started
+    ttr = ttr_init_from_file(arena, str_lit("test_output/output.records"), 2);
+    assert(-1 != ttr->currentlyActiveIndex);
+
+    currentlyActive = ttr_get_active(ttr);
+    assert(0 != currentlyActive);
+    assert(string_equals(comment, currentlyActive->message));
+
+    Timestamp pause = (Timestamp)(start + HOURS(1));
+    ttr_pause(ttr, pause);
+    assert(TIMER_STATE_PAUSED == currentlyActive->timer.state);
+
+    result = ttr_save_to_file(arena, ttr, str_lit("test_output/output.records"));
+    assert(TTR_ERROR != result);
+
+    // file now has 12 ended timers and 1 paused
+    ttr = ttr_init_from_file(arena, str_lit("test_output/output.records"), 2);
+    assert(-1 != ttr->currentlyActiveIndex);
+
+    currentlyActive = ttr_get_active(ttr);
+    assert(0 != currentlyActive);
+    assert(TIMER_STATE_PAUSED == currentlyActive->timer.state);
+
+    Timestamp unpause = (Timestamp)(start + HOURS(1) + MINUTES(30));
+    ttr_unpause(ttr, unpause);
+
+    result = ttr_save_to_file(arena, ttr, str_lit("test_output/output.records"));
+    assert(TTR_ERROR != result);
+
+    // file now has 12 ended timers and 1 started
+    ttr = ttr_init_from_file(arena, str_lit("test_output/output.records"), 2);
+    assert(-1 != ttr->currentlyActiveIndex);
+
+    currentlyActive = ttr_get_active(ttr);
+    assert(0 != currentlyActive);
+    assert(TIMER_STATE_STARTED == currentlyActive->timer.state);
+
+    Timestamp end = (Timestamp)(start + HOURS(4));
+    ttr_end(ttr, end);
+
+    result = ttr_save_to_file(arena, ttr, str_lit("test_output/output.records"));
+    assert(TTR_ERROR != result);
+
+    // file now has 13 ended timers
+    ttr = ttr_init_from_file(arena, str_lit("test_output/output.records"), 1);
+    assert(-1 == ttr->currentlyActiveIndex);
+
+    TTRRecord *record = ttr_get_day(ttr, datetime_from_timestamp(start));
+    assert(start == record->timer.start);
+    assert(end == record->timer.end);
+    assert(string_equals(comment, record->message));
 }
 
 int test_ttr(int argc, char **argv)
@@ -181,6 +263,7 @@ int test_ttr(int argc, char **argv)
     test_pause(&arena);
     test_unpause(&arena);
     test_comment(&arena);
+    test_end_to_end(&arena);
 
     return 0;
 }
