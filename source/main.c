@@ -40,7 +40,7 @@ StringArray convert_command_line_args(Arena *arena, int argc, char **argv)
     // TODO(speciial): I don't like how specific the index has to be set here!
     for (U64 argIndex = 1; argIndex < argc; argIndex++)
     {
-        String arg = { .content = argv[argIndex], .length = strlen(argv[argIndex]) };
+        String arg = { .content = (U8 *)argv[argIndex], .length = strlen(argv[argIndex]) };
         commandLineArgs.strings[argIndex - 1] = arg;
     }
 

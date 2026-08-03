@@ -6,4 +6,4 @@ add_executable( ${PROJECT_NAME}
     main.c
 )
 
-target_link_libraries( ${PROJECT_NAME} PRIVATE base_lib ttr_lib )
+target_link_libraries( ${PROJECT_NAME} PRIVATE ttr_warnings base_lib ttr_lib )

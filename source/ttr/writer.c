@@ -26,7 +26,7 @@ String ttr_convert_entries_to_string(Arena *arena, TTR *ttr)
 
     String headerString = string_alloc(arena, 256);
     S32 printedHeaderStringLength = snprintf(headerString.content, headerString.length,
-                                             "<version=%d;entries=%lld;>\n",
+                                             "<version=%d;entries=%llu;>\n",
                                              ttr->header.version, ttr->count);
     if (printedHeaderStringLength > 0)
     {
@@ -62,7 +62,7 @@ String ttr_convert_entries_to_string(Arena *arena, TTR *ttr)
         }
         else
         {
-            fprintf(stdout, "[TTR_WRITER]: Failed to write record with index %lld. Record state was UNINITIALIZED.\n", recordIndex);
+            fprintf(stdout, "[TTR_WRITER]: Failed to write record with index %llu. Record state was UNINITIALIZED.\n", recordIndex);
             failedToConvert = 1;
             break;
         }
@@ -82,14 +82,14 @@ String ttr_convert_entries_to_string(Arena *arena, TTR *ttr)
         }
         else
         {
-            fprintf(stdout, "[TTR_WRITER]: Failed to write record with index %lld. Record work location was unkown value.\n", recordIndex);
+            fprintf(stdout, "[TTR_WRITER]: Failed to write record with index %llu. Record work location was unkown value.\n", recordIndex);
             failedToConvert = 1;
             break;
         }
 
         String recordString = string_alloc(arena, 256 + message->length);
         S32 printedRecordStringLength = snprintf(recordString.content, recordString.length,
-                                                 "%lld:%lld,%lld,%lld,%lld,%.*s,%.*s,\"%.*s\";\n",
+                                                 "%llu:%llu,%llu,%llu,%llu,%.*s,%.*s,\"%.*s\";\n",
                                                  recordIndex, timer->start, timer->end, timer->lastPause, timer->totalPauseTimeSeconds,
                                                  (S32)timerStateString.length, timerStateString.content,
                                                  (S32)workLocationString.length, workLocationString.content,
@@ -100,7 +100,7 @@ String ttr_convert_entries_to_string(Arena *arena, TTR *ttr)
         }
         else
         {
-            fprintf(stdout, "[TTR_WRITER]: Failed to write record with index %lld. Formatting failed.\n", recordIndex);
+            fprintf(stdout, "[TTR_WRITER]: Failed to write record with index %llu. Formatting failed.\n", recordIndex);
             failedToConvert = 1;
             break;
         }

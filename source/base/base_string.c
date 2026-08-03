@@ -59,7 +59,8 @@ B32 string_equals(String s1, String s2)
 S64 string_index_of_u8(String string, U8 character)
 {
     S64 result = -1;
-    for (S64 stringIndex = 0; stringIndex < string.length; ++stringIndex)
+    // TODO(speciial): the conversion from U64 to S64 could be unsafe
+    for (S64 stringIndex = 0; stringIndex < (S64)string.length; ++stringIndex)
     {
         if (string.content[stringIndex] == character)
         {

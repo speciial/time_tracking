@@ -10,6 +10,14 @@ set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin )
 
 project( ttr VERSION 2.0 )
 
+add_library( ttr_warnings INTERFACE )
+
+if( MSVC )
+    target_compile_options( ttr_warnings INTERFACE /W4 /permissive- )
+elseif ( CMAKE_C_COMPILER_ID STREQUAL "GNU" )
+    target_compile_options( ttr_warnings INTERFACE -Wall -Wextra )
+endif()
+
 add_subdirectory( source )
 add_subdirectory( test )
 
