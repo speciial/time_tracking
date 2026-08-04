@@ -262,7 +262,9 @@ int main(int argc, char **argv)
                     // TODO(speciial): I really don't like the api in this if case!
                     ttr_save_to_file(&stringArena, ttr, str_lit("ttr.records"));
 
-                    TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(commandArgs.timestamp));
+                    // TODO(speciial): this is duplicated from ttr_start
+                    Timestamp start = (commandArgs.timestamp == 0) ? get_current_timestamp() : commandArgs.timestamp;
+                    TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(start));
                     DateTime currentDt = datetime_from_timestamp(current->timer.start);
                     fprintf(stdout, "Started time tracking at %02d.%02d. %02d:%02d\n",
                             currentDt.month, currentDt.day, currentDt.hour, currentDt.minute);
@@ -279,7 +281,9 @@ int main(int argc, char **argv)
                 {
                     ttr_save_to_file(&stringArena, ttr, str_lit("ttr.records"));
 
-                    TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(commandArgs.timestamp));
+                    // TODO(speciial): this is duplicated from ttr_end
+                    Timestamp end = (commandArgs.timestamp == 0) ? get_current_timestamp() : commandArgs.timestamp;
+                    TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(end));
                     DateTime currentDt = datetime_from_timestamp(current->timer.end);
                     fprintf(stdout, "Ended time tracking at %02d.%02d. %02d:%02d\n",
                             currentDt.month, currentDt.day, currentDt.hour, currentDt.minute);
@@ -296,7 +300,9 @@ int main(int argc, char **argv)
                 {
                     ttr_save_to_file(&stringArena, ttr, str_lit("ttr.records"));
 
-                    TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(commandArgs.timestamp));
+                    // TODO(speciial): this is duplicated from ttr_pause
+                    Timestamp pause = (commandArgs.timestamp == 0) ? get_current_timestamp() : commandArgs.timestamp;
+                    TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(pause));
                     DateTime currentDt = datetime_from_timestamp(current->timer.lastPause);
                     fprintf(stdout, "Paused time tracking at %02d.%02d. %02d:%02d\n",
                             currentDt.month, currentDt.day, currentDt.hour, currentDt.minute);
@@ -313,10 +319,12 @@ int main(int argc, char **argv)
                 {
                     ttr_save_to_file(&stringArena, ttr, str_lit("ttr.records"));
 
-                    TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(commandArgs.timestamp));
-                    // NOTE(speciial): this is broken. I can't cleanly determine the unpause time here. I also don't know,
+                    // TODO(speciial): this is duplicated from ttr_unpause
+                    Timestamp unpause = (commandArgs.timestamp == 0) ? get_current_timestamp() : commandArgs.timestamp;
+                    // TTRRecord *current = ttr_get_day(ttr, datetime_from_timestamp(unpause));
+                    // TODO(speciial): this is broken. I can't cleanly determine the unpause time here. I also don't know,
                     //                 if I like this kind of print anyway.
-                    DateTime currentDt = datetime_from_timestamp(current->timer.lastPause);
+                    DateTime currentDt = datetime_from_timestamp(unpause);
                     fprintf(stdout, "Unpaused time tracking at %02d.%02d. %02d:%02d\n",
                             currentDt.month, currentDt.day, currentDt.hour, currentDt.minute);
                 }
