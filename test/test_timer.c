@@ -113,23 +113,23 @@ void test_timer_total_active_time_seconds()
     Timer timer = { 0 };
 
     timer_start(&timer, start);
-    S64 activeTime = timer_total_active_time_seconds(&timer);
+    S64 activeTime = timer_total_active_time_seconds(&timer, 0);
 
     assert(0 < activeTime);
 
     timer_pause(&timer, pause);
-    activeTime = timer_total_active_time_seconds(&timer);
+    activeTime = timer_total_active_time_seconds(&timer, 0);
 
     assert(HOURS(1) == activeTime);
 
     timer_unpause(&timer, unpause);
-    activeTime = timer_total_active_time_seconds(&timer);
+    activeTime = timer_total_active_time_seconds(&timer, 0);
 
     assert(0 < activeTime);
     assert(MINUTES(30) == timer.totalPauseTimeSeconds);
 
     timer_end(&timer, end);
-    activeTime = timer_total_active_time_seconds(&timer);
+    activeTime = timer_total_active_time_seconds(&timer, 0);
 
     assert(HOURS(1) + MINUTES(30) == activeTime);
 }

@@ -66,22 +66,24 @@ TimerResult timer_unpause(Timer *timer, Timestamp timestamp)
     return result;
 }
 
-S64 timer_total_active_time_seconds(Timer *timer)
+S64 timer_total_active_time_seconds(Timer *timer, S64 defaultPauseTime)
 {
     S64 result = 0;
+
+    S64 pauseTimeSeconds = max_value(defaultPauseTime, timer->totalPauseTimeSeconds);
 
     if (timer->state == TIMER_STATE_STARTED)
     {
         Timestamp now = get_current_timestamp();
-        result = max_value(0, timestamp_diff_seconds(now, timer->start) - timer->totalPauseTimeSeconds);
+        result = max_value(0, timestamp_diff_seconds(now, timer->start) - pauseTimeSeconds);
     }
     else if (timer->state == TIMER_STATE_ENDED)
     {
-        result = max_value(0, timestamp_diff_seconds(timer->end, timer->start) - timer->totalPauseTimeSeconds);
+        result = max_value(0, timestamp_diff_seconds(timer->end, timer->start) - pauseTimeSeconds);
     }
     else if (timer->state == TIMER_STATE_PAUSED)
     {
-        result = max_value(0, timestamp_diff_seconds(timer->lastPause, timer->start) - timer->totalPauseTimeSeconds);
+        result = max_value(0, timestamp_diff_seconds(timer->lastPause, timer->start) - pauseTimeSeconds);
     }
 
     return result;

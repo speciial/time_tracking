@@ -11,6 +11,7 @@
 #include "writer.h"
 
 #define TTR_DEFAULT_PAUSE_TIME_IN_SECONDS (MINUTES(45))
+#define TTR_DEFAULT_PAUSE_TIME_IN_HOURS ((F32)MINUTES(45) / (60.0f * 60.0f))
 
 typedef struct TTRDerivedTimes TTRDerivedTimes;
 struct TTRDerivedTimes
@@ -328,22 +329,20 @@ String ttr_format_timer_string(Arena *arena, Timer timer)
 
 TTRDerivedTimes _ttr_derive_times(Timer *timer)
 {
+    // TODO(speciial): the pause time calculation feels hacked because I had to 
+    //                 duplicate the handling for determining the pauseTimeHours
+    //                 in timer_total_active_time_seconds and here.
+    //                 Should timers just know a 'defaultPauseTime'?
     TTRDerivedTimes result = { 0 };
-    result.netWorkTimeHours = (F32)timer_total_active_time_seconds(timer) / (60.0f * 60.0f);
-    result.pauseTimeHours = (F32)MINUTES(45) / (60.0f * 60.0f);
-
-    F32 timerPauseTimeHours = (F32)timer->totalPauseTimeSeconds / (60.0f * 60.0f);
-    if (timerPauseTimeHours > result.pauseTimeHours)
-    {
-        result.pauseTimeHours = timerPauseTimeHours;
-    }
+    result.netWorkTimeHours = (F32)timer_total_active_time_seconds(timer, TTR_DEFAULT_PAUSE_TIME_IN_SECONDS) / (60.0f * 60.0f);
+    result.pauseTimeHours = max_value(TTR_DEFAULT_PAUSE_TIME_IN_HOURS, (timer->totalPauseTimeSeconds / (60.0f * 60.0f)));
 
     result.startDt = datetime_from_timestamp(timer->start);
     if (timer->state == TIMER_STATE_ENDED)
     {
         result.endDt = datetime_from_timestamp(timer->end);
 
-        Timestamp relativeEnd = timer->start + timer_total_active_time_seconds(timer) + MINUTES(45);
+        Timestamp relativeEnd = timer->start + timer_total_active_time_seconds(timer, TTR_DEFAULT_PAUSE_TIME_IN_SECONDS) + MINUTES(45);
         result.relativeEndDt = datetime_from_timestamp(relativeEnd);
     }
 

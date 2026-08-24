@@ -41,6 +41,6 @@ TimerResult timer_end(Timer *timer, Timestamp timestamp);
 TimerResult timer_pause(Timer *timer, Timestamp timestamp);
 TimerResult timer_unpause(Timer *timer, Timestamp timestamp);
 
-S64 timer_total_active_time_seconds(Timer *timer);
+S64 timer_total_active_time_seconds(Timer *timer, S64 defaultPauseTime);
 
 #endif // timer_h
