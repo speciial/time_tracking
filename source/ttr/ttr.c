@@ -10,6 +10,21 @@
 #include "reader.h"
 #include "writer.h"
 
+#define TTR_DEFAULT_PAUSE_TIME_IN_SECONDS (MINUTES(45))
+
+typedef struct TTRDerivedTimes TTRDerivedTimes;
+struct TTRDerivedTimes
+{
+    DateTime startDt;
+    DateTime endDt;
+    DateTime relativeEndDt;
+
+    F32 netWorkTimeHours;
+    F32 pauseTimeHours;
+};
+
+TTRDerivedTimes _ttr_derive_times(Timer *timer);
+
 TTR *ttr_init_empty(Arena *arena, U64 capacity)
 {
     TTR *result = push_struct(arena, TTR);
@@ -252,55 +267,84 @@ String ttr_format_timer_string(Arena *arena, Timer timer)
     // TODO(speciial): this implementation for the formatting will probably replaced 
     // later on since it doesn't cover all the features I'd like to provide with this 
     // tool.
+    String result = { 0 };
 
-    String result = string_alloc(arena, 128);
-    S32 printedLength = 0;
-
-    DateTime startDt = datetime_from_timestamp(timer.start);
-    if (timer.state == TIMER_STATE_STARTED)
+    if (timer.state != TIMER_STATE_UNINITIALIZED)
     {
-        // [STARTED] 19.05., 08:30, NET: 3.45h, PAUSE: 0.75h
-        F32 netWorkTimeHours = (F32)timer_total_active_time_seconds(&timer) / (60.0f * 60.0f);
-        F32 pauseTimeHours = (F32)timer.totalPauseTimeSeconds / (60.0f * 60.0f);
+        TTRDerivedTimes derivedTimes = _ttr_derive_times(&timer);
 
-        printedLength = snprintf(result.content, result.length,
-                                 "[STARTED] %02d.%02d., %02d:%02d, NET: %.2fh, PAUSE: %.2fh\n",
-                                 startDt.day, startDt.month, startDt.hour, startDt.minute,
-                                 netWorkTimeHours, pauseTimeHours);
-    }
-    else if (timer.state == TIMER_STATE_PAUSED)
-    {
-        // [PAUSED] 19.05., 08:30, NET: 4.56h, PAUSE: 1.3h
-        F32 netWorkTimeHours = (F32)timer_total_active_time_seconds(&timer) / (60.0f * 60.0f);
-        F32 pauseTimeHours = (F32)timer.totalPauseTimeSeconds / (60.0f * 60.0f);
-
-        printedLength = snprintf(result.content, result.length,
-                                 "[PAUSED] %02d.%02d., %02d:%02d, NET: %.2fh, PAUSE: %.2fh\n",
-                                 startDt.day, startDt.month, startDt.hour, startDt.minute,
-                                 netWorkTimeHours, pauseTimeHours);
-    }
-    else if (timer.state == TIMER_STATE_ENDED)
-    {
-        // [ENDED] 19.05., 08:30 - 16:30, NET: 7.5h, PAUSE: 0.75h, TOTAL: 8.25h
-        DateTime endDt = datetime_from_timestamp(timer.end);
-        F32 netWorkTimeHours = (F32)timer_total_active_time_seconds(&timer) / (60.0f * 60.0f);
-        F32 pauseTimeHours = (F32)timer.totalPauseTimeSeconds / (60.0f * 60.0f);
-
-        printedLength = snprintf(result.content, result.length,
-                                 "[ENDED] %02d.%02d., %02d:%02d - %02d:%02d, NET: %.2fh, PAUSE: %.2fh, TOTAL: %.2fh\n",
-                                 startDt.day, startDt.month,
-                                 startDt.hour, startDt.minute, endDt.hour, endDt.minute,
-                                 netWorkTimeHours, pauseTimeHours, (netWorkTimeHours + pauseTimeHours));
-    }
-    else
-    {
-        // TODO(speciial): free alloced string?
+        result = string_alloc(arena, 128);
         S32 printedLength = 0;
+
+        String prefix;
+        String startEndString = string_alloc(arena, 64);
+
+        switch (timer.state)
+        {
+            case TIMER_STATE_STARTED:
+            {
+                prefix = str_lit("[STARED]");
+                startEndString.length = snprintf(startEndString.content, startEndString.length,
+                                                 "%02d:%02d",
+                                                 derivedTimes.startDt.hour, derivedTimes.startDt.minute);
+            } break;
+
+            case TIMER_STATE_PAUSED:
+            {
+                prefix = str_lit("[PAUSED]");
+                startEndString.length = snprintf(startEndString.content, startEndString.length,
+                                                 "%02d:%02d",
+                                                 derivedTimes.startDt.hour, derivedTimes.startDt.minute);
+            } break;
+
+            case TIMER_STATE_ENDED:
+            {
+                prefix = str_lit("[ENDED ]");
+                startEndString.length = snprintf(startEndString.content, startEndString.length,
+                                                 "%02d:%02d - %02d:%02d(%02d:%02d)",
+                                                 derivedTimes.startDt.hour, derivedTimes.startDt.minute,
+                                                 derivedTimes.endDt.hour, derivedTimes.endDt.minute,
+                                                 derivedTimes.relativeEndDt.hour, derivedTimes.relativeEndDt.minute);
+            } break;
+
+            default:
+            {
+                // TODO(speciial): Something went wrong.
+            } break;
+        }
+
+        result.length = snprintf(result.content, result.length,
+                                 "%.*s %02d.%02d., %.*s, NET: %.2fh, PAUSE: %.2fh, TOTAL: %.2fh\n",
+                                 (S32)prefix.length, prefix.content,
+                                 derivedTimes.startDt.day, derivedTimes.startDt.month,
+                                 (S32)startEndString.length, startEndString.content,
+                                 derivedTimes.netWorkTimeHours, derivedTimes.pauseTimeHours,
+                                 (derivedTimes.netWorkTimeHours + derivedTimes.pauseTimeHours));
+
     }
 
-    if (printedLength > 0)
+    return result;
+}
+
+TTRDerivedTimes _ttr_derive_times(Timer *timer)
+{
+    TTRDerivedTimes result = { 0 };
+    result.netWorkTimeHours = (F32)timer_total_active_time_seconds(timer) / (60.0f * 60.0f);
+    result.pauseTimeHours = (F32)MINUTES(45) / (60.0f * 60.0f);
+
+    F32 timerPauseTimeHours = (F32)timer->totalPauseTimeSeconds / (60.0f * 60.0f);
+    if (timerPauseTimeHours > result.pauseTimeHours)
     {
-        result.length = printedLength;
+        result.pauseTimeHours = timerPauseTimeHours;
+    }
+
+    result.startDt = datetime_from_timestamp(timer->start);
+    if (timer->state == TIMER_STATE_ENDED)
+    {
+        result.endDt = datetime_from_timestamp(timer->end);
+
+        Timestamp relativeEnd = timer->start + timer_total_active_time_seconds(timer) + MINUTES(45);
+        result.relativeEndDt = datetime_from_timestamp(relativeEnd);
     }
 
     return result;
